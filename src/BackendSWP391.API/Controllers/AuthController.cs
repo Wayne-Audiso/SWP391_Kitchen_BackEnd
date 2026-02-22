@@ -17,7 +17,7 @@ public class AuthController(IUserService userService) : ApiController
     {
         if (request.Password != request.ConfirmPassword)
         {
-            return BadRequest(new { message = "Passwords do not match" });
+            return BadRequest(new { message = "Passwords do not match!" });
         }
 
         var createModel = new CreateUserModel
