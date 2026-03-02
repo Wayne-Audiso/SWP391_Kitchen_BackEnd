@@ -14,4 +14,10 @@ public partial class Ingredient
     public string Unit { get; set; }
 
     public string StorageCondition { get; set; }
+
+    public int? MinStock { get; set; }
+
+    public decimal? Price { get; set; }
+
+    public virtual ICollection<RecipeIngredient> RecipeIngredients { get; set; } = new List<RecipeIngredient>();
 }

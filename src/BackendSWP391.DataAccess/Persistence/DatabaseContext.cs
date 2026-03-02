@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using BackendSWP391.Core.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using BackendSWP391.DataAccess.Identity;
@@ -26,15 +26,13 @@ public partial class DatabaseContext : IdentityDbContext<ApplicationUser>
 
     public virtual DbSet<Recipe> Recipes { get; set; }
 
-    public virtual new DbSet<Role> Roles { get; set; }
+    public virtual DbSet<RecipeIngredient> RecipeIngredients { get; set; }
 
     public virtual DbSet<Shipment> Shipments { get; set; }
 
     public virtual DbSet<ShipmentLine> ShipmentLines { get; set; }
 
     public virtual DbSet<StoreOrder> StoreOrders { get; set; }
-
-    public virtual DbSet<UserInfo> UserInfos { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -47,7 +45,7 @@ public partial class DatabaseContext : IdentityDbContext<ApplicationUser>
             entity.ToTable("CentralKitchen");
 
             entity.Property(e => e.CentralKitchenId)
-                .ValueGeneratedNever()
+                .ValueGeneratedOnAdd()
                 .HasColumnName("centralKitchenID");
             entity.Property(e => e.Address)
                 .HasMaxLength(255)
@@ -81,7 +79,7 @@ public partial class DatabaseContext : IdentityDbContext<ApplicationUser>
             entity.ToTable("FranchiseStore");
 
             entity.Property(e => e.StoreId)
-                .ValueGeneratedNever()
+                .ValueGeneratedOnAdd()
                 .HasColumnName("store_id");
             entity.Property(e => e.Address)
                 .HasMaxLength(255)
@@ -107,7 +105,7 @@ public partial class DatabaseContext : IdentityDbContext<ApplicationUser>
             entity.ToTable("Ingredient");
 
             entity.Property(e => e.IngredientId)
-                .ValueGeneratedNever()
+                .ValueGeneratedOnAdd()
                 .HasColumnName("ingredientID");
             entity.Property(e => e.IngredientName)
                 .IsRequired()
@@ -122,6 +120,11 @@ public partial class DatabaseContext : IdentityDbContext<ApplicationUser>
                 .HasMaxLength(20)
                 .IsUnicode(false)
                 .HasColumnName("unit");
+            entity.Property(e => e.MinStock)
+                .HasColumnName("minStock");
+            entity.Property(e => e.Price)
+                .HasColumnType("decimal(18,2)")
+                .HasColumnName("price");
         });
 
         modelBuilder.Entity<InventoryLocation>(entity =>
@@ -131,7 +134,7 @@ public partial class DatabaseContext : IdentityDbContext<ApplicationUser>
             entity.ToTable("InventoryLocation");
 
             entity.Property(e => e.InventoryLocationId)
-                .ValueGeneratedNever()
+                .ValueGeneratedOnAdd()
                 .HasColumnName("inventoryLocationID");
             entity.Property(e => e.CentralKitchenId).HasColumnName("centralKitchenID");
             entity.Property(e => e.LocationType)
@@ -163,7 +166,7 @@ public partial class DatabaseContext : IdentityDbContext<ApplicationUser>
             entity.ToTable("Product");
 
             entity.Property(e => e.ProductId)
-                .ValueGeneratedNever()
+                .ValueGeneratedOnAdd()
                 .HasColumnName("productID");
             entity.Property(e => e.ProductName)
                 .IsRequired()
@@ -193,7 +196,7 @@ public partial class DatabaseContext : IdentityDbContext<ApplicationUser>
             entity.ToTable("ProductType");
 
             entity.Property(e => e.ProductTypeId)
-                .ValueGeneratedNever()
+                .ValueGeneratedOnAdd()
                 .HasColumnName("productTypeID");
             entity.Property(e => e.Description)
                 .HasColumnType("text")
@@ -216,7 +219,7 @@ public partial class DatabaseContext : IdentityDbContext<ApplicationUser>
             entity.ToTable("Recipe");
 
             entity.Property(e => e.RecipeId)
-                .ValueGeneratedNever()
+                .ValueGeneratedOnAdd()
                 .HasColumnName("recipeID");
             entity.Property(e => e.CreatedDate)
                 .HasColumnType("datetime")
@@ -231,18 +234,6 @@ public partial class DatabaseContext : IdentityDbContext<ApplicationUser>
                 .HasColumnName("recipeName");
         });
 
-        modelBuilder.Entity<Role>(entity =>
-        {
-            entity.HasKey(e => e.RoleName).HasName("PK__Role__783254B013A98371");
-
-            entity.ToTable("Role");
-
-            entity.Property(e => e.RoleName)
-                .HasMaxLength(50)
-                .IsUnicode(false)
-                .HasColumnName("role_name");
-        });
-
         modelBuilder.Entity<Shipment>(entity =>
         {
             entity.HasKey(e => e.ShipmentId).HasName("PK__Shipment__47217FE16B7B71B7");
@@ -250,7 +241,7 @@ public partial class DatabaseContext : IdentityDbContext<ApplicationUser>
             entity.ToTable("Shipment");
 
             entity.Property(e => e.ShipmentId)
-                .ValueGeneratedNever()
+                .ValueGeneratedOnAdd()
                 .HasColumnName("shipmentID");
             entity.Property(e => e.CentralKitchenId).HasColumnName("centralKitchenID");
             entity.Property(e => e.DeliveryStatus)
@@ -283,7 +274,7 @@ public partial class DatabaseContext : IdentityDbContext<ApplicationUser>
             entity.ToTable("ShipmentLine");
 
             entity.Property(e => e.ShipmentLineId)
-                .ValueGeneratedNever()
+                .ValueGeneratedOnAdd()
                 .HasColumnName("shipmentLineID");
             entity.Property(e => e.DamagedQuantity).HasColumnName("damagedQuantity");
             entity.Property(e => e.ProductId).HasColumnName("productID");
@@ -309,7 +300,7 @@ public partial class DatabaseContext : IdentityDbContext<ApplicationUser>
             entity.ToTable("StoreOrder");
 
             entity.Property(e => e.StoreOrderId)
-                .ValueGeneratedNever()
+                .ValueGeneratedOnAdd()
                 .HasColumnName("storeOrderID");
             entity.Property(e => e.CentralKitchenId).HasColumnName("centralKitchenID");
             entity.Property(e => e.DeliveryDate)
@@ -336,48 +327,32 @@ public partial class DatabaseContext : IdentityDbContext<ApplicationUser>
                 .HasConstraintName("fk_order_store");
         });
 
-        modelBuilder.Entity<UserInfo>(entity =>
+        modelBuilder.Entity<RecipeIngredient>(entity =>
         {
-            entity.HasKey(e => e.UserId).HasName("PK__UserInfo__B9BE370F86F5446C");
+            entity.HasKey(e => e.RecipeIngredientId);
 
-            entity.ToTable("UserInfo");
+            entity.ToTable("RecipeIngredient");
 
-            entity.HasIndex(e => e.Username, "UQ__UserInfo__F3DBC572B414230C").IsUnique();
+            entity.Property(e => e.RecipeIngredientId)
+                .ValueGeneratedOnAdd()
+                .HasColumnName("recipeIngredientID");
+            entity.Property(e => e.RecipeId).HasColumnName("recipeID");
+            entity.Property(e => e.IngredientId).HasColumnName("ingredientID");
+            entity.Property(e => e.Quantity)
+                .HasColumnType("decimal(18,4)")
+                .HasColumnName("quantity");
 
-            entity.Property(e => e.UserId)
-                .HasMaxLength(50)
-                .IsUnicode(false)
-                .HasColumnName("user_id");
-            entity.Property(e => e.Email)
-                .HasMaxLength(200)
-                .IsUnicode(false)
-                .HasColumnName("email");
-            entity.Property(e => e.Location)
-                .HasMaxLength(200)
-                .IsUnicode(false)
-                .HasColumnName("location");
-            entity.Property(e => e.Password)
-                .IsRequired()
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("password");
-            entity.Property(e => e.RoleName)
-                .IsRequired()
-                .HasMaxLength(50)
-                .IsUnicode(false)
-                .HasColumnName("role_name");
-            entity.Property(e => e.Username)
-                .IsRequired()
-                .HasMaxLength(50)
-                .IsUnicode(false)
-                .HasColumnName("username");
+            entity.HasOne(d => d.Recipe)
+                .WithMany(p => p.RecipeIngredients)
+                .HasForeignKey(d => d.RecipeId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_ri_recipe");
 
-            entity.Ignore(e => e.Token);
-
-            entity.HasOne(d => d.RoleNameNavigation).WithMany(p => p.UserInfos)
-                .HasForeignKey(d => d.RoleName)
+            entity.HasOne(d => d.Ingredient)
+                .WithMany(p => p.RecipeIngredients)
+                .HasForeignKey(d => d.IngredientId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("fk_user_role");
+                .HasConstraintName("fk_ri_ingredient");
         });
 
         OnModelCreatingPartial(modelBuilder);
@@ -385,4 +360,3 @@ public partial class DatabaseContext : IdentityDbContext<ApplicationUser>
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }
-

@@ -1,4 +1,4 @@
-﻿using BackendSWP391.Application.Exceptions;
+using BackendSWP391.Application.Exceptions;
 using BackendSWP391.Application.Models;
 using BackendSWP391.Core.Exceptions;
 using Newtonsoft.Json;
@@ -21,26 +21,36 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
 
     private Task HandleException(HttpContext context, Exception ex)
     {
-        logger.LogError(ex.Message);
+        logger.LogError(ex, ex.Message);
 
-        var code = StatusCodes.Status500InternalServerError;
-        var errors = new List<string> { ex.Message };
-
-        code = ex switch
+        var statusCode = ex switch
         {
-            NotFoundException => StatusCodes.Status404NotFound,
-            ResourceNotFoundException => StatusCodes.Status404NotFound,
-            BadRequestException => StatusCodes.Status400BadRequest,
-            UnprocessableRequestException => StatusCodes.Status422UnprocessableEntity,
-            _ => code
+            NotFoundException              => StatusCodes.Status404NotFound,
+            ResourceNotFoundException      => StatusCodes.Status404NotFound,
+            BadRequestException            => StatusCodes.Status400BadRequest,
+            UnprocessableRequestException  => StatusCodes.Status422UnprocessableEntity,
+            _                              => StatusCodes.Status500InternalServerError
         };
 
-        var result = JsonConvert.SerializeObject(ApiResult<string>.Failure(errors));
+        var errors  = new List<string> { ex.Message };
+        var message = ex switch
+        {
+            NotFoundException             => "Không tìm thấy dữ liệu",
+            ResourceNotFoundException     => "Không tìm thấy tài nguyên",
+            BadRequestException           => "Dữ liệu đầu vào không hợp lệ",
+            UnprocessableRequestException => "Không thể xử lý yêu cầu",
+            _                             => "Đã xảy ra lỗi hệ thống"
+        };
+
+        var body = ApiResult<object>.Failure(errors, message, statusCode);
+        var json = JsonConvert.SerializeObject(body, new JsonSerializerSettings
+        {
+            NullValueHandling = NullValueHandling.Ignore
+        });
 
         context.Response.ContentType = "application/json";
-        context.Response.StatusCode = code;
+        context.Response.StatusCode  = statusCode;
 
-        return context.Response.WriteAsync(result);
+        return context.Response.WriteAsync(json);
     }
 }
-

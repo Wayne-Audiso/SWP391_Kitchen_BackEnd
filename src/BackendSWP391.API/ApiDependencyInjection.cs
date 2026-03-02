@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -9,40 +9,58 @@ public static class ApiDependencyInjection
 {
     public static void AddJwt(this IServiceCollection services, IConfiguration configuration)
     {
-        var secretKey = configuration.GetValue<string>("JwtConfiguration:SecretKey");
+        var secretKey = configuration["JwtConfiguration:SecretKey"]!;
+        var issuer    = configuration["JwtConfiguration:Issuer"]!;
+        var audience  = configuration["JwtConfiguration:Audience"]!;
 
         var key = Encoding.ASCII.GetBytes(secretKey);
 
-        services.AddAuthentication(x =>
+        services.AddAuthentication(options =>
             {
-                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme    = JwtBearerDefaults.AuthenticationScheme;
             })
-            .AddJwtBearer(x =>
+            .AddJwtBearer(options =>
             {
-                x.RequireHttpsMetadata = false;
-                x.SaveToken = true;
-                x.TokenValidationParameters = new TokenValidationParameters
+                options.RequireHttpsMetadata = false;
+                options.SaveToken            = true;
+                options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(key),
-                    ValidateIssuer = false,
-                    ValidateAudience = false
+                    IssuerSigningKey         = new SymmetricSecurityKey(key),
+
+                    ValidateIssuer   = true,
+                    ValidIssuer      = issuer,
+
+                    ValidateAudience = true,
+                    ValidAudience    = audience,
+
+                    ValidateLifetime = true,
+                    ClockSkew        = TimeSpan.Zero   // không cho phép trễ đồng hồ
                 };
             });
+
+        services.AddAuthorization();
     }
 
     public static void AddSwagger(this IServiceCollection services)
     {
         services.AddSwaggerGen(s =>
         {
+            s.SwaggerDoc("v1", new OpenApiInfo
+            {
+                Title   = "FranchiseStore & CentralKitchen API",
+                Version = "v1"
+            });
+
+            // Thêm ô nhập Bearer token trong Swagger UI
             s.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
-                Description = "JWT Authorization header using the Bearer scheme (Example: 'Bearer YOUR_TOKEN')",
-                Name = "Authorization",
-                In = ParameterLocation.Header,
-                Type = SecuritySchemeType.ApiKey,
-                Scheme = "Bearer"
+                Description = "JWT Authorization. Nhập: Bearer {token}",
+                Name        = "Authorization",
+                In          = ParameterLocation.Header,
+                Type        = SecuritySchemeType.ApiKey,
+                Scheme      = "Bearer"
             });
 
             s.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -53,7 +71,7 @@ public static class ApiDependencyInjection
                         Reference = new OpenApiReference
                         {
                             Type = ReferenceType.SecurityScheme,
-                            Id = "Bearer"
+                            Id   = "Bearer"
                         }
                     },
                     Array.Empty<string>()
@@ -62,4 +80,3 @@ public static class ApiDependencyInjection
         });
     }
 }
-

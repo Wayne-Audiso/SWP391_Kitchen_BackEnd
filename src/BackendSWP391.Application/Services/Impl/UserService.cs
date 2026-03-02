@@ -1,4 +1,4 @@
-﻿using MapsterMapper;
+using MapsterMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -21,6 +21,8 @@ public class UserService(
     IEmailService emailService)
     : IUserService
 {
+    private const string DefaultRole = "Franchise Store Staff";
+
     public async Task<CreateUserResponseModel> CreateAsync(CreateUserModel createUserModel)
     {
         var user = mapper.Map<ApplicationUser>(createUserModel);
@@ -28,6 +30,12 @@ public class UserService(
         var result = await userManager.CreateAsync(user, createUserModel.Password);
 
         if (!result.Succeeded) throw new BadRequestException(result.Errors.FirstOrDefault()?.Description);
+
+        // Assign role — dùng role được chỉ định hoặc default
+        var roleName = string.IsNullOrWhiteSpace(createUserModel.Role) ? DefaultRole : createUserModel.Role;
+        var roleResult = await userManager.AddToRoleAsync(user, roleName);
+        if (!roleResult.Succeeded)
+            throw new BadRequestException($"Role '{roleName}' không tồn tại. Vui lòng kiểm tra lại tên role.");
 
         var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
 
@@ -56,17 +64,17 @@ public class UserService(
         if (!signInResult.Succeeded)
             throw new BadRequestException("Username or password is incorrect");
 
-        var token = JwtHelper.GenerateToken(user, configuration);
-
         var roles = await userManager.GetRolesAsync(user);
+
+        var jwtToken = JwtHelper.GenerateToken(user, roles, configuration);
 
         return new LoginResponseModel
         {
-            UserId = user.Id,
+            UserId   = user.Id,
             Username = user.UserName,
-            Role = roles.FirstOrDefault(),
-            Email = user.Email,
-            Token = token
+            Role     = roles.FirstOrDefault(),
+            Email    = user.Email,
+            Token    = jwtToken
         };
     }
 
@@ -108,11 +116,28 @@ public class UserService(
         };
     }
 
-    public async Task<IEnumerable<UserResponseModel>> GetAllAsync()
+    public async Task<IEnumerable<UserResponseModel>> GetAllAsync(string? currentUserId)
     {
-        var users = await userManager.Users.ToListAsync();
+        var query = userManager.Users.AsQueryable();
 
-        return mapper.Map<IEnumerable<UserResponseModel>>(users);
+        if (!string.IsNullOrWhiteSpace(currentUserId))
+            query = query.Where(u => u.Id != currentUserId);
+
+        var users = await query.ToListAsync();
+
+        var result = new List<UserResponseModel>();
+        foreach (var user in users)
+        {
+            var roles = await userManager.GetRolesAsync(user);
+            result.Add(new UserResponseModel
+            {
+                Id       = Guid.Parse(user.Id),
+                UserName = user.UserName,
+                Email    = user.Email,
+                Role     = roles.FirstOrDefault()
+            });
+        }
+        return result;
     }
 
     public async Task<UserResponseModel> GetByIdAsync(Guid id)
@@ -122,7 +147,15 @@ public class UserService(
         if (user == null)
             throw new NotFoundException($"User with ID {id} not found");
 
-        return mapper.Map<UserResponseModel>(user);
+        var roles = await userManager.GetRolesAsync(user);
+
+        return new UserResponseModel
+        {
+            Id       = Guid.Parse(user.Id),
+            UserName = user.UserName,
+            Email    = user.Email,
+            Role     = roles.FirstOrDefault()
+        };
     }
 
     public async Task<UpdateUserResponseModel> UpdateAsync(Guid id, UpdateUserModel updateUserModel)
@@ -132,7 +165,7 @@ public class UserService(
         if (user == null)
             throw new NotFoundException($"User with ID {id} not found");
 
-        user.Email = updateUserModel.Email;
+        user.Email    = updateUserModel.Email;
         user.UserName = updateUserModel.UserName;
 
         var result = await userManager.UpdateAsync(user);
@@ -161,4 +194,3 @@ public class UserService(
         return true;
     }
 }
-

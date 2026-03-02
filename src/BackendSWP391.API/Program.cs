@@ -6,7 +6,6 @@ using BackendSWP391.API.Middleware;
 using BackendSWP391.Application;
 using BackendSWP391.Application.Models.Validators;
 using BackendSWP391.Application.Services;
-using BackendSWP391.Application.Services.Impl;
 using BackendSWP391.DataAccess;
 using BackendSWP391.DataAccess.Persistence;
 
@@ -27,7 +26,6 @@ builder.Services.AddDataAccess(builder.Configuration)
 builder.Services.AddJwt(builder.Configuration);
 
 builder.Services.AddEmailConfiguration(builder.Configuration);
-builder.Services.AddScoped<IAuthService, AuthService>();
 var app = builder.Build();
 
 using var scope = app.Services.CreateScope();

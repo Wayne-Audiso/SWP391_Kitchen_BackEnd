@@ -4,6 +4,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using BackendSWP391.DataAccess.Identity;
 using BackendSWP391.DataAccess.Persistence;
+using BackendSWP391.DataAccess.Repositories;
+using BackendSWP391.DataAccess.Repositories.Impl;
 
 namespace BackendSWP391.DataAccess;
 
@@ -25,6 +27,9 @@ public static class DataAccessDependencyInjection
             })
             .AddEntityFrameworkStores<DatabaseContext>()
             .AddDefaultTokenProviders();
+
+        // Đăng ký Generic Repository dưới dạng open-generic — một dòng cho tất cả entity
+        services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
         return services;
     }

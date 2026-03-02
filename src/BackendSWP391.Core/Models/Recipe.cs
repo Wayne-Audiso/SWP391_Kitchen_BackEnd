@@ -14,4 +14,6 @@ public partial class Recipe
     public string Description { get; set; }
 
     public DateTime? CreatedDate { get; set; }
+
+    public virtual ICollection<RecipeIngredient> RecipeIngredients { get; set; } = new List<RecipeIngredient>();
 }

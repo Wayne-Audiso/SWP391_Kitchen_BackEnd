@@ -26,11 +26,20 @@ public static class ApplicationDependencyInjection
 
     private static void AddServices(this IServiceCollection services, IWebHostEnvironment env)
     {
-
-
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IClaimService, ClaimService>();
         services.AddScoped<ITemplateService, TemplateService>();
+
+        // ── Master Data services ─────────────────────────────────────────────
+        services.AddScoped<IProductService, ProductService>();
+        services.AddScoped<IStoreService, StoreService>();
+        services.AddScoped<IIngredientService, IngredientService>();
+        services.AddScoped<IRecipeService, RecipeService>();
+
+        // ── Inventory & Order services ────────────────────────────────────────
+        services.AddScoped<IInventoryLocationService, InventoryLocationService>();
+        services.AddScoped<IStoreOrderService, StoreOrderService>();
+        services.AddScoped<IShipmentService, ShipmentService>();
 
         if (env.IsDevelopment())
             services.AddScoped<IEmailService, DevEmailService>();

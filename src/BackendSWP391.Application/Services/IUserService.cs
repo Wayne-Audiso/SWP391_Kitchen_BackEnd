@@ -1,4 +1,4 @@
-﻿using BackendSWP391.Application.Models;
+using BackendSWP391.Application.Models;
 using BackendSWP391.Application.Models.User;
 
 namespace BackendSWP391.Application.Services;
@@ -13,7 +13,7 @@ public interface IUserService
 
     Task<LoginResponseModel> LoginAsync(LoginUserModel loginUserModel);
 
-    Task<IEnumerable<UserResponseModel>> GetAllAsync();
+    Task<IEnumerable<UserResponseModel>> GetAllAsync(string? currentUserId);
 
     Task<UserResponseModel> GetByIdAsync(Guid id);
 
