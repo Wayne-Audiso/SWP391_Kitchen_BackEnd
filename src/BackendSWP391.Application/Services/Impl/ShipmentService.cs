@@ -50,7 +50,7 @@ public class ShipmentService(
             StoreOrderId     = model.StoreOrderId,
             CentralKitchenId = model.CentralKitchenId,
             ShipmentDate     = DateTime.UtcNow,
-            DeliveryStatus   = "Pending"
+            DeliveryStatus   = "Preparing"
         };
 
         await shipmentRepo.AddAsync(entity);

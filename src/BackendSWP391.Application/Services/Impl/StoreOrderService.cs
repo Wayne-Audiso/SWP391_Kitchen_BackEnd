@@ -6,12 +6,14 @@ using BackendSWP391.DataAccess.Repositories;
 namespace BackendSWP391.Application.Services.Impl;
 
 public class StoreOrderService(
-    IGenericRepository<StoreOrder> orderRepo) : IStoreOrderService
+    IGenericRepository<StoreOrder>     orderRepo,
+    IGenericRepository<StoreOrderLine> lineRepo) : IStoreOrderService
 {
     private IQueryable<StoreOrderDto> ProjectedQuery =>
         orderRepo.Queryable
             .Include(o => o.CentralKitchen)
             .Include(o => o.FranchiseStore)
+            .Include(o => o.OrderLines).ThenInclude(l => l.Product)
             .Select(o => new StoreOrderDto
             {
                 StoreOrderId     = o.StoreOrderId,
@@ -21,8 +23,15 @@ public class StoreOrderService(
                 StoreName        = o.FranchiseStore != null ? o.FranchiseStore.StoreName : null,
                 OrderDate        = o.OrderDate,
                 Status           = o.Status,
-                Quantity         = o.Quantity,
-                DeliveryDate     = o.DeliveryDate
+                DeliveryDate     = o.DeliveryDate,
+                Lines            = o.OrderLines.Select(l => new StoreOrderLineDto
+                {
+                    StoreOrderLineId = l.StoreOrderLineId,
+                    ProductId        = l.ProductId,
+                    ProductName      = l.Product != null ? l.Product.ProductName : null,
+                    Unit             = l.Product != null ? l.Product.Unit : null,
+                    Quantity         = l.Quantity
+                }).ToList()
             });
 
     public async Task<List<StoreOrderDto>> GetAllOrdersAsync()
@@ -40,13 +49,24 @@ public class StoreOrderService(
         {
             CentralKitchenId = model.CentralKitchenId,
             FranchiseStoreId = model.FranchiseStoreId,
-            Quantity         = model.Quantity,
+            Quantity         = model.Lines.Sum(l => l.Quantity), // keep for backward compat
             DeliveryDate     = model.DeliveryDate,
             OrderDate        = DateTime.UtcNow,
             Status           = "Pending"
         };
 
         await orderRepo.AddAsync(entity);
+
+        foreach (var lm in model.Lines)
+        {
+            await lineRepo.AddAsync(new StoreOrderLine
+            {
+                StoreOrderId = entity.StoreOrderId,
+                ProductId    = lm.ProductId,
+                Quantity     = lm.Quantity
+            });
+        }
+
         return (await GetOrderByIdAsync(entity.StoreOrderId))!;
     }
 

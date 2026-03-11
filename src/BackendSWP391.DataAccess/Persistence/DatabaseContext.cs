@@ -32,7 +32,9 @@ public partial class DatabaseContext : IdentityDbContext<ApplicationUser>
 
     public virtual DbSet<ShipmentLine> ShipmentLines { get; set; }
 
-    public virtual DbSet<StoreOrder> StoreOrders { get; set; }
+    public virtual DbSet<StoreOrder>     StoreOrders     { get; set; }
+
+    public virtual DbSet<StoreOrderLine> StoreOrderLines { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -325,6 +327,30 @@ public partial class DatabaseContext : IdentityDbContext<ApplicationUser>
                 .HasForeignKey(d => d.FranchiseStoreId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_order_store");
+        });
+
+        modelBuilder.Entity<StoreOrderLine>(entity =>
+        {
+            entity.HasKey(e => e.StoreOrderLineId).HasName("PK__StoreOrdLine");
+
+            entity.ToTable("StoreOrderLine");
+
+            entity.Property(e => e.StoreOrderLineId)
+                .ValueGeneratedOnAdd()
+                .HasColumnName("storeOrderLineID");
+            entity.Property(e => e.StoreOrderId).HasColumnName("storeOrderID");
+            entity.Property(e => e.ProductId).HasColumnName("productID");
+            entity.Property(e => e.Quantity).HasColumnName("quantity");
+
+            entity.HasOne(d => d.StoreOrder).WithMany(p => p.OrderLines)
+                .HasForeignKey(d => d.StoreOrderId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_orderline_order");
+
+            entity.HasOne(d => d.Product).WithMany(p => p.OrderLines)
+                .HasForeignKey(d => d.ProductId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_orderline_product");
         });
 
         modelBuilder.Entity<RecipeIngredient>(entity =>

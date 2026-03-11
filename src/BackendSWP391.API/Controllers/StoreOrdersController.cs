@@ -38,8 +38,8 @@ public class StoreOrdersController(IStoreOrderService orderService) : ApiControl
         return Ok(ApiResult<List<StoreOrderDto>>.Ok(data, "Lấy đơn hàng theo cửa hàng thành công"));
     }
 
-    /// <summary>POST /api/store-orders — Tạo đơn hàng mới. Yêu cầu role Franchise Store Staff hoặc Supply Coordinator.</summary>
-    [Authorize(Roles = "Franchise Store Staff,Supply Coordinator")]
+    /// <summary>POST /api/store-orders — Tạo đơn hàng mới. Yêu cầu role Admin, Franchise Store Staff hoặc Supply Coordinator.</summary>
+    [Authorize(Roles = "Admin,Franchise Store Staff,Supply Coordinator")]
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateStoreOrderModel model)
     {
@@ -50,9 +50,9 @@ public class StoreOrdersController(IStoreOrderService orderService) : ApiControl
     /// <summary>
     /// PUT /api/store-orders/{id}/status — Cập nhật trạng thái đơn hàng.
     /// Luồng: Pending → Approved/Rejected → InProduction → InDelivery → Completed
-    /// Yêu cầu role Supply Coordinator hoặc Manager.
+    /// Yêu cầu role Admin, Supply Coordinator hoặc Manager.
     /// </summary>
-    [Authorize(Roles = "Supply Coordinator,Manager")]
+    [Authorize(Roles = "Admin,Supply Coordinator,Manager")]
     [HttpPut("{id:int}/status")]
     public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateStoreOrderStatusModel model)
     {
