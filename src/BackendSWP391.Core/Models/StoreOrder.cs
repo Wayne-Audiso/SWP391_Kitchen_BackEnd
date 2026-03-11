@@ -26,4 +26,6 @@ public partial class StoreOrder
     public virtual FranchiseStore FranchiseStore { get; set; }
 
     public virtual ICollection<Shipment> Shipments { get; set; } = new List<Shipment>();
+
+    public virtual ICollection<StoreOrderLine> OrderLines { get; set; } = new List<StoreOrderLine>();
 }

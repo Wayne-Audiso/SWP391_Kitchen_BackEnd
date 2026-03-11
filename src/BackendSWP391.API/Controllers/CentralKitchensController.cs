@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using BackendSWP391.Application.Models;
 using BackendSWP391.Application.Models.Store;
@@ -14,7 +14,7 @@ public class CentralKitchensController(IStoreService storeService) : ApiControll
     public async Task<IActionResult> GetAll()
     {
         var data = await storeService.GetAllKitchensAsync();
-        return Ok(ApiResult<List<CentralKitchenDto>>.Ok(data, "Lấy danh sách bếp trung tâm thành công"));
+        return Ok(ApiResult<List<CentralKitchenDto>>.Ok(data, "Lấy danh sách bếp trung tâm thành công!"));
     }
 
     /// <summary>GET /api/central-kitchens/{id}</summary>
@@ -25,7 +25,7 @@ public class CentralKitchensController(IStoreService storeService) : ApiControll
         if (result is null)
             return NotFound(ApiResult<CentralKitchenDto>.NotFound($"Không tìm thấy bếp trung tâm với Id = {id}"));
 
-        return Ok(ApiResult<CentralKitchenDto>.Ok(result, "Lấy thông tin bếp trung tâm thành công"));
+        return Ok(ApiResult<CentralKitchenDto>.Ok(result, "Lấy thông tin bếp trung tâm thành công!"));
     }
 
     /// <summary>POST /api/central-kitchens — Yêu cầu role Admin.</summary>

@@ -40,9 +40,9 @@ public class ShipmentsController(IShipmentService shipmentService) : ApiControll
 
     /// <summary>
     /// POST /api/shipments — Tạo chuyến giao hàng kèm danh sách sản phẩm.
-    /// Yêu cầu role Supply Coordinator hoặc Central Kitchen Staff.
+    /// Yêu cầu role Admin, Supply Coordinator hoặc Central Kitchen Staff.
     /// </summary>
-    [Authorize(Roles = "Supply Coordinator,Central Kitchen Staff")]
+    [Authorize(Roles = "Admin,Supply Coordinator,Central Kitchen Staff")]
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateShipmentModel model)
     {
@@ -52,9 +52,9 @@ public class ShipmentsController(IShipmentService shipmentService) : ApiControll
 
     /// <summary>
     /// PUT /api/shipments/{id}/status — Cập nhật trạng thái giao hàng.
-    /// Yêu cầu role Supply Coordinator hoặc Manager.
+    /// Yêu cầu role Admin, Supply Coordinator hoặc Manager.
     /// </summary>
-    [Authorize(Roles = "Supply Coordinator,Manager")]
+    [Authorize(Roles = "Admin,Supply Coordinator,Manager")]
     [HttpPut("{id:int}/status")]
     public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateShipmentStatusModel model)
     {
@@ -66,9 +66,9 @@ public class ShipmentsController(IShipmentService shipmentService) : ApiControll
 
     /// <summary>
     /// PUT /api/shipments/{id}/receive — Xác nhận nhận hàng, cập nhật số lượng thực nhận và hàng hỏng.
-    /// Yêu cầu role Franchise Store Staff hoặc Supply Coordinator.
+    /// Yêu cầu role Admin, Franchise Store Staff hoặc Supply Coordinator.
     /// </summary>
-    [Authorize(Roles = "Franchise Store Staff,Supply Coordinator")]
+    [Authorize(Roles = "Admin,Franchise Store Staff,Supply Coordinator")]
     [HttpPut("{id:int}/receive")]
     public async Task<IActionResult> Receive(int id, [FromBody] ReceiveShipmentModel model)
     {

@@ -9,6 +9,7 @@ public class StoreOrderDto
     public string?   StoreName         { get; set; }
     public DateTime? OrderDate         { get; set; }
     public string?   Status            { get; set; }
-    public int?      Quantity          { get; set; }
     public DateTime? DeliveryDate      { get; set; }
+    public List<StoreOrderLineDto> Lines { get; set; } = new();
+    public int TotalQuantity => Lines.Sum(l => l.Quantity);
 }

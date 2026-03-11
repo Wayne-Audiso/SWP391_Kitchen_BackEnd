@@ -19,5 +19,7 @@ public partial class Product
 
     public virtual ProductType ProductType { get; set; }
 
-    public virtual ICollection<ShipmentLine> ShipmentLines { get; set; } = new List<ShipmentLine>();
+    public virtual ICollection<ShipmentLine>   ShipmentLines { get; set; } = new List<ShipmentLine>();
+
+    public virtual ICollection<StoreOrderLine> OrderLines    { get; set; } = new List<StoreOrderLine>();
 }
