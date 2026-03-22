@@ -32,6 +32,20 @@ public class CreateUserModelValidator : AbstractValidator<CreateUserModel>
             .WithMessage("Email address is not valid")
             .Must(EmailAddressIsUnique)
             .WithMessage("Email address is already in use");
+
+        When(u => !string.IsNullOrWhiteSpace(u.PhoneNumber), () =>
+        {
+            RuleFor(u => u.PhoneNumber)
+                .Matches(UserValidatorConfiguration.VietnamPhonePattern)
+                .WithMessage("Số điện thoại không đúng định dạng Việt Nam (VD: 0901234567 hoặc +84901234567).");
+        });
+
+        When(u => !string.IsNullOrWhiteSpace(u.Address), () =>
+        {
+            RuleFor(u => u.Address)
+                .MinimumLength(UserValidatorConfiguration.MinimumAddressLength)
+                .WithMessage($"Địa chỉ phải có ít nhất {UserValidatorConfiguration.MinimumAddressLength} ký tự.");
+        });
     }
 
     private bool EmailAddressIsUnique(string email)

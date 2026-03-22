@@ -34,10 +34,12 @@ public class AuthController(IUserService userService) : ApiController
 
         var createModel = new CreateUserModel
         {
-            UserName = request.UserName,
-            Email    = request.Email,
-            Password = request.Password,
-            Role     = request.Role
+            UserName    = request.UserName,
+            Email       = request.Email,
+            Password    = request.Password,
+            Role        = request.Role,
+            PhoneNumber = request.PhoneNumber,
+            Address     = request.Address
         };
 
         var result = await userService.CreateAsync(createModel);
