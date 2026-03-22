@@ -2,5 +2,8 @@
 
 namespace BackendSWP391.DataAccess.Identity;
 
-public class ApplicationUser : IdentityUser { }
+public class ApplicationUser : IdentityUser
+{
+    public string? Address { get; set; }
+}
 
