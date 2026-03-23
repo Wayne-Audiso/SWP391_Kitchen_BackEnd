@@ -27,8 +27,8 @@ public class IngredientsController(IIngredientService ingredientService) : ApiCo
         return Ok(ApiResult<IngredientDto>.Ok(result, "Lấy thông tin nguyên liệu thành công"));
     }
 
-    /// <summary>POST /api/ingredients — Yêu cầu role Admin hoặc Manager.</summary>
-    [Authorize(Roles = "Admin,Manager")]
+    /// <summary>POST /api/ingredients — Yêu cầu role Admin, Manager hoặc Central Kitchen Staff.</summary>
+    [Authorize(Roles = "Admin,Manager,Central Kitchen Staff")]
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateIngredientModel model)
     {
@@ -36,8 +36,8 @@ public class IngredientsController(IIngredientService ingredientService) : ApiCo
         return StatusCode(201, ApiResult<IngredientDto>.Created(result, "Tạo nguyên liệu thành công"));
     }
 
-    /// <summary>PUT /api/ingredients/{id} — Yêu cầu role Admin hoặc Manager.</summary>
-    [Authorize(Roles = "Admin,Manager")]
+    /// <summary>PUT /api/ingredients/{id} — Yêu cầu role Admin, Manager hoặc Central Kitchen Staff.</summary>
+    [Authorize(Roles = "Admin,Manager,Central Kitchen Staff")]
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateIngredientModel model)
     {

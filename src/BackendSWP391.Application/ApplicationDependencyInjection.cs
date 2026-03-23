@@ -40,6 +40,7 @@ public static class ApplicationDependencyInjection
         services.AddScoped<IInventoryLocationService, InventoryLocationService>();
         services.AddScoped<IStoreOrderService, StoreOrderService>();
         services.AddScoped<IShipmentService, ShipmentService>();
+        services.AddScoped<IProductionBatchService, ProductionBatchService>();
 
         if (env.IsDevelopment())
             services.AddScoped<IEmailService, DevEmailService>();

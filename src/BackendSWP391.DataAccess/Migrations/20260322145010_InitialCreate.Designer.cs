@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BackendSWP391.DataAccess.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20260225171651_Initial")]
-    partial class Initial
+    [Migration("20260322145010_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -28,8 +28,11 @@ namespace BackendSWP391.DataAccess.Migrations
             modelBuilder.Entity("BackendSWP391.Core.Models.CentralKitchen", b =>
                 {
                     b.Property<int>("CentralKitchenId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasColumnName("centralKitchenID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CentralKitchenId"));
 
                     b.Property<string>("Address")
                         .HasMaxLength(255)
@@ -73,8 +76,11 @@ namespace BackendSWP391.DataAccess.Migrations
             modelBuilder.Entity("BackendSWP391.Core.Models.FranchiseStore", b =>
                 {
                     b.Property<int>("StoreId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasColumnName("store_id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("StoreId"));
 
                     b.Property<string>("Address")
                         .HasMaxLength(255)
@@ -104,8 +110,11 @@ namespace BackendSWP391.DataAccess.Migrations
             modelBuilder.Entity("BackendSWP391.Core.Models.Ingredient", b =>
                 {
                     b.Property<int>("IngredientId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasColumnName("ingredientID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IngredientId"));
 
                     b.Property<string>("IngredientName")
                         .IsRequired()
@@ -113,6 +122,14 @@ namespace BackendSWP391.DataAccess.Migrations
                         .IsUnicode(false)
                         .HasColumnType("varchar(100)")
                         .HasColumnName("ingredientName");
+
+                    b.Property<int?>("MinStock")
+                        .HasColumnType("int")
+                        .HasColumnName("minStock");
+
+                    b.Property<decimal?>("Price")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("price");
 
                     b.Property<string>("StorageCondition")
                         .HasMaxLength(100)
@@ -135,8 +152,11 @@ namespace BackendSWP391.DataAccess.Migrations
             modelBuilder.Entity("BackendSWP391.Core.Models.InventoryLocation", b =>
                 {
                     b.Property<int>("InventoryLocationId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasColumnName("inventoryLocationID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("InventoryLocationId"));
 
                     b.Property<int>("CentralKitchenId")
                         .HasColumnType("int")
@@ -175,8 +195,11 @@ namespace BackendSWP391.DataAccess.Migrations
             modelBuilder.Entity("BackendSWP391.Core.Models.Product", b =>
                 {
                     b.Property<int>("ProductId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasColumnName("productID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductId"));
 
                     b.Property<string>("ProductName")
                         .IsRequired()
@@ -212,8 +235,11 @@ namespace BackendSWP391.DataAccess.Migrations
             modelBuilder.Entity("BackendSWP391.Core.Models.ProductType", b =>
                 {
                     b.Property<int>("ProductTypeId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasColumnName("productTypeID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductTypeId"));
 
                     b.Property<string>("Description")
                         .HasColumnType("text")
@@ -241,8 +267,11 @@ namespace BackendSWP391.DataAccess.Migrations
             modelBuilder.Entity("BackendSWP391.Core.Models.Recipe", b =>
                 {
                     b.Property<int>("RecipeId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasColumnName("recipeID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RecipeId"));
 
                     b.Property<DateTime?>("CreatedDate")
                         .HasColumnType("datetime")
@@ -265,11 +294,44 @@ namespace BackendSWP391.DataAccess.Migrations
                     b.ToTable("Recipe", (string)null);
                 });
 
+            modelBuilder.Entity("BackendSWP391.Core.Models.RecipeIngredient", b =>
+                {
+                    b.Property<int>("RecipeIngredientId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("recipeIngredientID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RecipeIngredientId"));
+
+                    b.Property<int>("IngredientId")
+                        .HasColumnType("int")
+                        .HasColumnName("ingredientID");
+
+                    b.Property<decimal?>("Quantity")
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("quantity");
+
+                    b.Property<int>("RecipeId")
+                        .HasColumnType("int")
+                        .HasColumnName("recipeID");
+
+                    b.HasKey("RecipeIngredientId");
+
+                    b.HasIndex("IngredientId");
+
+                    b.HasIndex("RecipeId");
+
+                    b.ToTable("RecipeIngredient", (string)null);
+                });
+
             modelBuilder.Entity("BackendSWP391.Core.Models.Shipment", b =>
                 {
                     b.Property<int>("ShipmentId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasColumnName("shipmentID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ShipmentId"));
 
                     b.Property<int>("CentralKitchenId")
                         .HasColumnType("int")
@@ -306,8 +368,11 @@ namespace BackendSWP391.DataAccess.Migrations
             modelBuilder.Entity("BackendSWP391.Core.Models.ShipmentLine", b =>
                 {
                     b.Property<int>("ShipmentLineId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasColumnName("shipmentLineID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ShipmentLineId"));
 
                     b.Property<int?>("DamagedQuantity")
                         .HasColumnType("int")
@@ -342,8 +407,11 @@ namespace BackendSWP391.DataAccess.Migrations
             modelBuilder.Entity("BackendSWP391.Core.Models.StoreOrder", b =>
                 {
                     b.Property<int>("StoreOrderId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasColumnName("storeOrderID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("StoreOrderId"));
 
                     b.Property<int>("CentralKitchenId")
                         .HasColumnType("int")
@@ -381,6 +449,37 @@ namespace BackendSWP391.DataAccess.Migrations
                     b.ToTable("StoreOrder", (string)null);
                 });
 
+            modelBuilder.Entity("BackendSWP391.Core.Models.StoreOrderLine", b =>
+                {
+                    b.Property<int>("StoreOrderLineId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("storeOrderLineID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("StoreOrderLineId"));
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int")
+                        .HasColumnName("productID");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int")
+                        .HasColumnName("quantity");
+
+                    b.Property<int>("StoreOrderId")
+                        .HasColumnType("int")
+                        .HasColumnName("storeOrderID");
+
+                    b.HasKey("StoreOrderLineId")
+                        .HasName("PK__StoreOrdLine");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("StoreOrderId");
+
+                    b.ToTable("StoreOrderLine", (string)null);
+                });
+
             modelBuilder.Entity("BackendSWP391.DataAccess.Identity.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
@@ -388,6 +487,9 @@ namespace BackendSWP391.DataAccess.Migrations
 
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
+
+                    b.Property<string>("Address")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -612,6 +714,26 @@ namespace BackendSWP391.DataAccess.Migrations
                     b.Navigation("ProductType");
                 });
 
+            modelBuilder.Entity("BackendSWP391.Core.Models.RecipeIngredient", b =>
+                {
+                    b.HasOne("BackendSWP391.Core.Models.Ingredient", "Ingredient")
+                        .WithMany("RecipeIngredients")
+                        .HasForeignKey("IngredientId")
+                        .IsRequired()
+                        .HasConstraintName("fk_ri_ingredient");
+
+                    b.HasOne("BackendSWP391.Core.Models.Recipe", "Recipe")
+                        .WithMany("RecipeIngredients")
+                        .HasForeignKey("RecipeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_ri_recipe");
+
+                    b.Navigation("Ingredient");
+
+                    b.Navigation("Recipe");
+                });
+
             modelBuilder.Entity("BackendSWP391.Core.Models.Shipment", b =>
                 {
                     b.HasOne("BackendSWP391.Core.Models.CentralKitchen", "CentralKitchen")
@@ -667,6 +789,25 @@ namespace BackendSWP391.DataAccess.Migrations
                     b.Navigation("CentralKitchen");
 
                     b.Navigation("FranchiseStore");
+                });
+
+            modelBuilder.Entity("BackendSWP391.Core.Models.StoreOrderLine", b =>
+                {
+                    b.HasOne("BackendSWP391.Core.Models.Product", "Product")
+                        .WithMany("OrderLines")
+                        .HasForeignKey("ProductId")
+                        .IsRequired()
+                        .HasConstraintName("fk_orderline_product");
+
+                    b.HasOne("BackendSWP391.Core.Models.StoreOrder", "StoreOrder")
+                        .WithMany("OrderLines")
+                        .HasForeignKey("StoreOrderId")
+                        .IsRequired()
+                        .HasConstraintName("fk_orderline_order");
+
+                    b.Navigation("Product");
+
+                    b.Navigation("StoreOrder");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -736,14 +877,26 @@ namespace BackendSWP391.DataAccess.Migrations
                     b.Navigation("StoreOrders");
                 });
 
+            modelBuilder.Entity("BackendSWP391.Core.Models.Ingredient", b =>
+                {
+                    b.Navigation("RecipeIngredients");
+                });
+
             modelBuilder.Entity("BackendSWP391.Core.Models.Product", b =>
                 {
+                    b.Navigation("OrderLines");
+
                     b.Navigation("ShipmentLines");
                 });
 
             modelBuilder.Entity("BackendSWP391.Core.Models.ProductType", b =>
                 {
                     b.Navigation("Products");
+                });
+
+            modelBuilder.Entity("BackendSWP391.Core.Models.Recipe", b =>
+                {
+                    b.Navigation("RecipeIngredients");
                 });
 
             modelBuilder.Entity("BackendSWP391.Core.Models.Shipment", b =>
@@ -753,6 +906,8 @@ namespace BackendSWP391.DataAccess.Migrations
 
             modelBuilder.Entity("BackendSWP391.Core.Models.StoreOrder", b =>
                 {
+                    b.Navigation("OrderLines");
+
                     b.Navigation("Shipments");
                 });
 #pragma warning restore 612, 618

@@ -10,7 +10,7 @@ namespace BackendSWP391.API.Controllers;
 public class StoreOrdersController(IStoreOrderService orderService) : ApiController
 {
     /// <summary>GET /api/store-orders — Lấy danh sách đơn hàng kèm tên bếp và tên cửa hàng.</summary>
-    [Authorize(Roles = "Admin,Manager,Supply Coordinator")]
+    [Authorize(Roles = "Admin,Manager,Supply Coordinator,Franchise Store Staff,Central Kitchen Staff")]
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
@@ -49,10 +49,9 @@ public class StoreOrdersController(IStoreOrderService orderService) : ApiControl
 
     /// <summary>
     /// PUT /api/store-orders/{id}/status — Cập nhật trạng thái đơn hàng.
-    /// Luồng: Pending → Approved/Rejected → InProduction → InDelivery → Completed
-    /// Yêu cầu role Admin, Supply Coordinator hoặc Manager.
+    /// Luồng mới: Pending → Submitted → Approved/Rejected → Delivering/NeedsProduction → Delivered/RejectedByStore
     /// </summary>
-    [Authorize(Roles = "Admin,Supply Coordinator,Manager")]
+    [Authorize(Roles = "Admin,Supply Coordinator,Manager,Franchise Store Staff")]
     [HttpPut("{id:int}/status")]
     public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateStoreOrderStatusModel model)
     {
@@ -71,5 +70,19 @@ public class StoreOrdersController(IStoreOrderService orderService) : ApiControl
         if (!success)
             return NotFound(ApiResult<bool>.NotFound($"Không tìm thấy đơn hàng với Id = {id}"));
         return Ok(ApiResult<bool>.Ok(true, "Xóa đơn hàng thành công"));
+    }
+
+    /// <summary>
+    /// GET /api/store-orders/{id}/check-stock — Kiểm tra tồn kho nguyên liệu so với yêu cầu đơn hàng.
+    /// Trả về { sufficient: bool, shortages: [{ingredientName, required, available, unit}] }
+    /// </summary>
+    [Authorize(Roles = "Admin,Supply Coordinator,Manager")]
+    [HttpGet("{id:int}/check-stock")]
+    public async Task<IActionResult> CheckStock(int id)
+    {
+        var result = await orderService.CheckStockAsync(id);
+        if (result is null)
+            return NotFound(ApiResult<StockCheckResult>.NotFound($"Không tìm thấy đơn hàng với Id = {id}"));
+        return Ok(ApiResult<StockCheckResult>.Ok(result, "Kiểm tra tồn kho thành công"));
     }
 }

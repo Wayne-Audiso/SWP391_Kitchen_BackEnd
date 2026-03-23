@@ -11,6 +11,8 @@ public interface IProductService
     Task<ProductDto?>       UpdateProductAsync(int id, UpdateProductModel model);
     /// <summary>Xóa mềm: cập nhật Status = "Inactive".</summary>
     Task<bool>              DeleteProductAsync(int id);
+    /// <summary>Bán sản phẩm: kiểm tra và trừ tồn kho nguyên liệu theo công thức.</summary>
+    Task<SellProductResult> SellProductAsync(int productId, int quantity);
 
     // ── ProductType ──────────────────────────────────────────────────────────
     Task<List<ProductTypeDto>>  GetAllProductTypesAsync();

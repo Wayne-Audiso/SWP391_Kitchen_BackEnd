@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace BackendSWP391.DataAccess.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -30,6 +30,7 @@ namespace BackendSWP391.DataAccess.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Address = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -56,8 +57,8 @@ namespace BackendSWP391.DataAccess.Migrations
                 {
                     centralKitchenID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    name = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
-                    address = table.Column<string>(type: "varchar(255)", unicode: false, maxLength: 255, nullable: true),
+                    name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    address = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     phone = table.Column<string>(type: "varchar(20)", unicode: false, maxLength: 20, nullable: true),
                     status = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: true),
                     created_at = table.Column<DateTime>(type: "datetime", nullable: true),
@@ -74,9 +75,12 @@ namespace BackendSWP391.DataAccess.Migrations
                 {
                     ingredientID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    ingredientName = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
-                    unit = table.Column<string>(type: "varchar(20)", unicode: false, maxLength: 20, nullable: true),
-                    storageCondition = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: true)
+                    ingredientName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    unit = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    storageCondition = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    minStock = table.Column<int>(type: "int", nullable: true),
+                    price = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    CurrentStock = table.Column<decimal>(type: "decimal(18,2)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -89,9 +93,9 @@ namespace BackendSWP391.DataAccess.Migrations
                 {
                     productTypeID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    typeName = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
-                    description = table.Column<string>(type: "text", nullable: true),
-                    storageCondition = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: true)
+                    typeName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    storageCondition = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -104,8 +108,8 @@ namespace BackendSWP391.DataAccess.Migrations
                 {
                     recipeID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    recipeName = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
-                    description = table.Column<string>(type: "text", nullable: true),
+                    recipeName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    description = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     createdDate = table.Column<DateTime>(type: "datetime", nullable: true)
                 },
                 constraints: table =>
@@ -225,9 +229,9 @@ namespace BackendSWP391.DataAccess.Migrations
                 {
                     store_id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    kitchen_id = table.Column<int>(type: "int", nullable: false),
-                    store_name = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
-                    address = table.Column<string>(type: "varchar(255)", unicode: false, maxLength: 255, nullable: true)
+                    store_name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    address = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    kitchen_id = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -236,7 +240,8 @@ namespace BackendSWP391.DataAccess.Migrations
                         name: "fk_store_kitchen",
                         column: x => x.kitchen_id,
                         principalTable: "CentralKitchen",
-                        principalColumn: "centralKitchenID");
+                        principalColumn: "centralKitchenID",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -245,11 +250,11 @@ namespace BackendSWP391.DataAccess.Migrations
                 {
                     inventoryLocationID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    centralKitchenID = table.Column<int>(type: "int", nullable: false),
-                    name = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: true),
+                    name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     location_type = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: true),
                     status = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: true),
-                    updated_at = table.Column<DateTime>(type: "datetime", nullable: true)
+                    updated_at = table.Column<DateTime>(type: "datetime", nullable: true),
+                    centralKitchenID = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -258,7 +263,35 @@ namespace BackendSWP391.DataAccess.Migrations
                         name: "fk_inventory_kitchen",
                         column: x => x.centralKitchenID,
                         principalTable: "CentralKitchen",
-                        principalColumn: "centralKitchenID");
+                        principalColumn: "centralKitchenID",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RecipeIngredient",
+                columns: table => new
+                {
+                    recipeIngredientID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    recipeID = table.Column<int>(type: "int", nullable: false),
+                    ingredientID = table.Column<int>(type: "int", nullable: false),
+                    quantity = table.Column<decimal>(type: "decimal(18,4)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RecipeIngredient", x => x.recipeIngredientID);
+                    table.ForeignKey(
+                        name: "fk_ri_ingredient",
+                        column: x => x.ingredientID,
+                        principalTable: "Ingredient",
+                        principalColumn: "ingredientID",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_ri_recipe",
+                        column: x => x.recipeID,
+                        principalTable: "Recipe",
+                        principalColumn: "recipeID",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -267,19 +300,50 @@ namespace BackendSWP391.DataAccess.Migrations
                 {
                     productID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    productTypeID = table.Column<int>(type: "int", nullable: false),
-                    productName = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
+                    productName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    unit = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     status = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: true),
-                    unit = table.Column<string>(type: "varchar(20)", unicode: false, maxLength: 20, nullable: true)
+                    productTypeID = table.Column<int>(type: "int", nullable: false),
+                    recipeID = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK__Product__2D10D14ACEDA15FA", x => x.productID);
                     table.ForeignKey(
+                        name: "fk_product_recipe",
+                        column: x => x.recipeID,
+                        principalTable: "Recipe",
+                        principalColumn: "recipeID",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
                         name: "fk_product_type",
                         column: x => x.productTypeID,
                         principalTable: "ProductType",
-                        principalColumn: "productTypeID");
+                        principalColumn: "productTypeID",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ProductionBatch",
+                columns: table => new
+                {
+                    productionBatchID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    centralKitchenID = table.Column<int>(type: "int", nullable: false),
+                    createdDate = table.Column<DateTime>(type: "datetime", nullable: true),
+                    completedDate = table.Column<DateTime>(type: "datetime", nullable: true),
+                    status = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: true),
+                    notes = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProductionBatch", x => x.productionBatchID);
+                    table.ForeignKey(
+                        name: "fk_batch_kitchen",
+                        column: x => x.centralKitchenID,
+                        principalTable: "CentralKitchen",
+                        principalColumn: "centralKitchenID",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -288,26 +352,64 @@ namespace BackendSWP391.DataAccess.Migrations
                 {
                     storeOrderID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    centralKitchenID = table.Column<int>(type: "int", nullable: false),
                     franchiseStoreID = table.Column<int>(type: "int", nullable: false),
+                    centralKitchenID = table.Column<int>(type: "int", nullable: false),
                     orderDate = table.Column<DateTime>(type: "datetime", nullable: true),
+                    deliveryDate = table.Column<DateTime>(type: "datetime", nullable: true),
                     status = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: true),
                     quantity = table.Column<int>(type: "int", nullable: true),
-                    deliveryDate = table.Column<DateTime>(type: "datetime", nullable: true)
+                    rejectReason = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    productionBatchID = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK__StoreOrd__3353A2C6E34AC3AD", x => x.storeOrderID);
                     table.ForeignKey(
+                        name: "fk_order_batch",
+                        column: x => x.productionBatchID,
+                        principalTable: "ProductionBatch",
+                        principalColumn: "productionBatchID",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
                         name: "fk_order_kitchen",
                         column: x => x.centralKitchenID,
                         principalTable: "CentralKitchen",
-                        principalColumn: "centralKitchenID");
+                        principalColumn: "centralKitchenID",
+                        onDelete: ReferentialAction.NoAction);
                     table.ForeignKey(
                         name: "fk_order_store",
                         column: x => x.franchiseStoreID,
                         principalTable: "FranchiseStore",
-                        principalColumn: "store_id");
+                        principalColumn: "store_id",
+                        onDelete: ReferentialAction.NoAction);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ProductionBatchLine",
+                columns: table => new
+                {
+                    productionBatchLineID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    productionBatchID = table.Column<int>(type: "int", nullable: false),
+                    productID = table.Column<int>(type: "int", nullable: false),
+                    requiredQuantity = table.Column<int>(type: "int", nullable: false),
+                    producedQuantity = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProductionBatchLine", x => x.productionBatchLineID);
+                    table.ForeignKey(
+                        name: "fk_batchline_batch",
+                        column: x => x.productionBatchID,
+                        principalTable: "ProductionBatch",
+                        principalColumn: "productionBatchID",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_batchline_product",
+                        column: x => x.productID,
+                        principalTable: "Product",
+                        principalColumn: "productID",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -319,8 +421,10 @@ namespace BackendSWP391.DataAccess.Migrations
                     storeOrderID = table.Column<int>(type: "int", nullable: false),
                     centralKitchenID = table.Column<int>(type: "int", nullable: false),
                     shipmentDate = table.Column<DateTime>(type: "datetime", nullable: true),
+                    receivedDate = table.Column<DateTime>(type: "datetime", nullable: true),
                     deliveryStatus = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: true),
-                    receivedDate = table.Column<DateTime>(type: "datetime", nullable: true)
+                    ManufacturingDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ExpiryDate = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -329,12 +433,41 @@ namespace BackendSWP391.DataAccess.Migrations
                         name: "fk_shipment_kitchen",
                         column: x => x.centralKitchenID,
                         principalTable: "CentralKitchen",
-                        principalColumn: "centralKitchenID");
+                        principalColumn: "centralKitchenID",
+                        onDelete: ReferentialAction.NoAction);
                     table.ForeignKey(
                         name: "fk_shipment_order",
                         column: x => x.storeOrderID,
                         principalTable: "StoreOrder",
-                        principalColumn: "storeOrderID");
+                        principalColumn: "storeOrderID",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "StoreOrderLine",
+                columns: table => new
+                {
+                    storeOrderLineID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    storeOrderID = table.Column<int>(type: "int", nullable: false),
+                    productID = table.Column<int>(type: "int", nullable: false),
+                    quantity = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK__StoreOrdLine", x => x.storeOrderLineID);
+                    table.ForeignKey(
+                        name: "fk_orderline_order",
+                        column: x => x.storeOrderID,
+                        principalTable: "StoreOrder",
+                        principalColumn: "storeOrderID",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_orderline_product",
+                        column: x => x.productID,
+                        principalTable: "Product",
+                        principalColumn: "productID",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -356,18 +489,17 @@ namespace BackendSWP391.DataAccess.Migrations
                         name: "fk_line_product",
                         column: x => x.productID,
                         principalTable: "Product",
-                        principalColumn: "productID");
+                        principalColumn: "productID",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "fk_line_shipment",
                         column: x => x.shipmentID,
                         principalTable: "Shipment",
-                        principalColumn: "shipmentID");
+                        principalColumn: "shipmentID",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.CreateIndex(
-                name: "IX_AspNetRoleClaims_RoleId",
-                table: "AspNetRoleClaims",
-                column: "RoleId");
+            // ---------- Indexes ----------
 
             migrationBuilder.CreateIndex(
                 name: "RoleNameIndex",
@@ -375,6 +507,23 @@ namespace BackendSWP391.DataAccess.Migrations
                 column: "NormalizedName",
                 unique: true,
                 filter: "[NormalizedName] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AspNetRoleClaims_RoleId",
+                table: "AspNetRoleClaims",
+                column: "RoleId");
+
+            migrationBuilder.CreateIndex(
+                name: "EmailIndex",
+                table: "AspNetUsers",
+                column: "NormalizedEmail");
+
+            migrationBuilder.CreateIndex(
+                name: "UserNameIndex",
+                table: "AspNetUsers",
+                column: "NormalizedUserName",
+                unique: true,
+                filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetUserClaims_UserId",
@@ -392,18 +541,6 @@ namespace BackendSWP391.DataAccess.Migrations
                 column: "RoleId");
 
             migrationBuilder.CreateIndex(
-                name: "EmailIndex",
-                table: "AspNetUsers",
-                column: "NormalizedEmail");
-
-            migrationBuilder.CreateIndex(
-                name: "UserNameIndex",
-                table: "AspNetUsers",
-                column: "NormalizedUserName",
-                unique: true,
-                filter: "[NormalizedUserName] IS NOT NULL");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_FranchiseStore_kitchen_id",
                 table: "FranchiseStore",
                 column: "kitchen_id");
@@ -417,6 +554,36 @@ namespace BackendSWP391.DataAccess.Migrations
                 name: "IX_Product_productTypeID",
                 table: "Product",
                 column: "productTypeID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Product_recipeID",
+                table: "Product",
+                column: "recipeID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProductionBatch_centralKitchenID",
+                table: "ProductionBatch",
+                column: "centralKitchenID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProductionBatchLine_productID",
+                table: "ProductionBatchLine",
+                column: "productID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProductionBatchLine_productionBatchID",
+                table: "ProductionBatchLine",
+                column: "productionBatchID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RecipeIngredient_ingredientID",
+                table: "RecipeIngredient",
+                column: "ingredientID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RecipeIngredient_recipeID",
+                table: "RecipeIngredient",
+                column: "recipeID");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Shipment_centralKitchenID",
@@ -447,61 +614,47 @@ namespace BackendSWP391.DataAccess.Migrations
                 name: "IX_StoreOrder_franchiseStoreID",
                 table: "StoreOrder",
                 column: "franchiseStoreID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StoreOrder_productionBatchID",
+                table: "StoreOrder",
+                column: "productionBatchID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StoreOrderLine_productID",
+                table: "StoreOrderLine",
+                column: "productID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StoreOrderLine_storeOrderID",
+                table: "StoreOrderLine",
+                column: "storeOrderID");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "AspNetRoleClaims");
-
-            migrationBuilder.DropTable(
-                name: "AspNetUserClaims");
-
-            migrationBuilder.DropTable(
-                name: "AspNetUserLogins");
-
-            migrationBuilder.DropTable(
-                name: "AspNetUserRoles");
-
-            migrationBuilder.DropTable(
-                name: "AspNetUserTokens");
-
-            migrationBuilder.DropTable(
-                name: "Ingredient");
-
-            migrationBuilder.DropTable(
-                name: "InventoryLocation");
-
-            migrationBuilder.DropTable(
-                name: "Recipe");
-
-            migrationBuilder.DropTable(
-                name: "ShipmentLine");
-
-            migrationBuilder.DropTable(
-                name: "AspNetRoles");
-
-            migrationBuilder.DropTable(
-                name: "AspNetUsers");
-
-            migrationBuilder.DropTable(
-                name: "Product");
-
-            migrationBuilder.DropTable(
-                name: "Shipment");
-
-            migrationBuilder.DropTable(
-                name: "ProductType");
-
-            migrationBuilder.DropTable(
-                name: "StoreOrder");
-
-            migrationBuilder.DropTable(
-                name: "FranchiseStore");
-
-            migrationBuilder.DropTable(
-                name: "CentralKitchen");
+            migrationBuilder.DropTable(name: "AspNetRoleClaims");
+            migrationBuilder.DropTable(name: "AspNetUserClaims");
+            migrationBuilder.DropTable(name: "AspNetUserLogins");
+            migrationBuilder.DropTable(name: "AspNetUserRoles");
+            migrationBuilder.DropTable(name: "AspNetUserTokens");
+            migrationBuilder.DropTable(name: "ShipmentLine");
+            migrationBuilder.DropTable(name: "StoreOrderLine");
+            migrationBuilder.DropTable(name: "ProductionBatchLine");
+            migrationBuilder.DropTable(name: "RecipeIngredient");
+            migrationBuilder.DropTable(name: "InventoryLocation");
+            migrationBuilder.DropTable(name: "Shipment");
+            migrationBuilder.DropTable(name: "StoreOrder");
+            migrationBuilder.DropTable(name: "ProductionBatch");
+            migrationBuilder.DropTable(name: "Product");
+            migrationBuilder.DropTable(name: "FranchiseStore");
+            migrationBuilder.DropTable(name: "Ingredient");
+            migrationBuilder.DropTable(name: "Recipe");
+            migrationBuilder.DropTable(name: "ProductType");
+            migrationBuilder.DropTable(name: "CentralKitchen");
+            migrationBuilder.DropTable(name: "AspNetRoles");
+            migrationBuilder.DropTable(name: "AspNetUsers");
         }
     }
 }

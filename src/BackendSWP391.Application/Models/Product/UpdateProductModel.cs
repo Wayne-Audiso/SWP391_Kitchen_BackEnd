@@ -6,4 +6,5 @@ public class UpdateProductModel
     public string  ProductName   { get; set; } = default!;
     public string? Status        { get; set; }
     public string? Unit          { get; set; }
+    public int?    RecipeId      { get; set; }
 }

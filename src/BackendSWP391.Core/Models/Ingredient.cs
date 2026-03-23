@@ -19,5 +19,7 @@ public partial class Ingredient
 
     public decimal? Price { get; set; }
 
+    public decimal? CurrentStock { get; set; }
+
     public virtual ICollection<RecipeIngredient> RecipeIngredients { get; set; } = new List<RecipeIngredient>();
 }

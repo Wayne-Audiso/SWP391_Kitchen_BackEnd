@@ -28,8 +28,8 @@ public class ProductsController(IProductService productService) : ApiController
         return Ok(ApiResult<ProductDto>.Ok(result, "Lấy thông tin sản phẩm thành công"));
     }
 
-    /// <summary>POST /api/products — Yêu cầu role Admin.</summary>
-    [Authorize(Roles = "Admin")]
+    /// <summary>POST /api/products — Yêu cầu role Admin hoặc Manager.</summary>
+    [Authorize(Roles = "Admin,Manager")]
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateProductModel model)
     {
@@ -37,8 +37,8 @@ public class ProductsController(IProductService productService) : ApiController
         return StatusCode(201, ApiResult<ProductDto>.Created(result, "Tạo sản phẩm thành công"));
     }
 
-    /// <summary>PUT /api/products/{id} — Yêu cầu role Admin.</summary>
-    [Authorize(Roles = "Admin")]
+    /// <summary>PUT /api/products/{id} — Yêu cầu role Admin hoặc Manager.</summary>
+    [Authorize(Roles = "Admin,Manager")]
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateProductModel model)
     {
@@ -59,5 +59,17 @@ public class ProductsController(IProductService productService) : ApiController
             return NotFound(ApiResult<bool>.NotFound($"Không tìm thấy sản phẩm với Id = {id}"));
 
         return Ok(ApiResult<bool>.Ok(true, "Xóa sản phẩm thành công"));
+    }
+
+    /// <summary>POST /api/products/{id}/sell — Bán sản phẩm, trừ tồn kho nguyên liệu. Yêu cầu role Franchise Store Staff.</summary>
+    [Authorize(Roles = "Franchise Store Staff,Admin")]
+    [HttpPost("{id:int}/sell")]
+    public async Task<IActionResult> Sell(int id, [FromBody] SellProductModel model)
+    {
+        var result = await productService.SellProductAsync(id, model.Quantity);
+        if (!result.IsSuccess)
+            return BadRequest(ApiResult<bool>.BadRequest(result.Message));
+
+        return Ok(ApiResult<bool>.Ok(true, result.Message));
     }
 }

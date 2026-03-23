@@ -28,4 +28,6 @@ public partial class CentralKitchen
     public virtual ICollection<Shipment> Shipments { get; set; } = new List<Shipment>();
 
     public virtual ICollection<StoreOrder> StoreOrders { get; set; } = new List<StoreOrder>();
+
+    public virtual ICollection<ProductionBatch> ProductionBatches { get; set; } = new List<ProductionBatch>();
 }

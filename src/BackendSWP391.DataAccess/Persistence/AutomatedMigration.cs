@@ -17,9 +17,16 @@ public static class AutomatedMigration
         "Supply Coordinator"
     ];
 
-    private const string AdminUserName = "admin";
-    private const string AdminEmail    = "admin@kitchen.com";
-    private const string AdminPassword = "Admin@123456";
+    private record SeedUser(string UserName, string Email, string Password, string Role);
+
+    private static readonly SeedUser[] SeedUsers =
+    [
+        new("admin",       "admin@kitchen.com",       "Admin@123456",  "Admin"),
+        new("manager",     "manager@kitchen.com",     "Manager@123456", "Manager"),
+        new("store_staff", "store@kitchen.com",       "Store@123456",  "Franchise Store Staff"),
+        new("kitchen_staff","kitchen@kitchen.com",    "Kitchen@123456","Central Kitchen Staff"),
+        new("supply_coord","supply@kitchen.com",      "Supply@123456", "Supply Coordinator"),
+    ];
 
     public static async Task MigrateAsync(IServiceProvider services)
     {
@@ -28,7 +35,7 @@ public static class AutomatedMigration
         if (context.Database.IsSqlServer()) await context.Database.MigrateAsync();
 
         await SeedRolesAsync(services);
-        await SeedAdminAsync(services);
+        await SeedUsersAsync(services);
         await SeedMasterDataAsync(context);
     }
 
@@ -45,22 +52,25 @@ public static class AutomatedMigration
         }
     }
 
-    private static async Task SeedAdminAsync(IServiceProvider services)
+    private static async Task SeedUsersAsync(IServiceProvider services)
     {
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
 
-        if (await userManager.FindByNameAsync(AdminUserName) is not null) return;
-
-        var admin = new ApplicationUser
+        foreach (var seed in SeedUsers)
         {
-            UserName       = AdminUserName,
-            Email          = AdminEmail,
-            EmailConfirmed = true
-        };
+            if (await userManager.FindByNameAsync(seed.UserName) is not null) continue;
 
-        var result = await userManager.CreateAsync(admin, AdminPassword);
-        if (result.Succeeded)
-            await userManager.AddToRoleAsync(admin, "Admin");
+            var user = new ApplicationUser
+            {
+                UserName       = seed.UserName,
+                Email          = seed.Email,
+                EmailConfirmed = true
+            };
+
+            var result = await userManager.CreateAsync(user, seed.Password);
+            if (result.Succeeded)
+                await userManager.AddToRoleAsync(user, seed.Role);
+        }
     }
 
     // ── Master Data ─────────────────────────────────────────────────────────

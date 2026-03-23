@@ -20,10 +20,12 @@ public class ShipmentService(
                 StoreOrderId     = s.StoreOrderId,
                 CentralKitchenId = s.CentralKitchenId,
                 KitchenName      = s.CentralKitchen != null ? s.CentralKitchen.Name : null,
-                ShipmentDate     = s.ShipmentDate,
-                DeliveryStatus   = s.DeliveryStatus,
-                ReceivedDate     = s.ReceivedDate,
-                Lines            = s.ShipmentLines.Select(l => new ShipmentLineDto
+                ShipmentDate      = s.ShipmentDate,
+                DeliveryStatus    = s.DeliveryStatus,
+                ReceivedDate      = s.ReceivedDate,
+                ManufacturingDate = s.ManufacturingDate,
+                ExpiryDate        = s.ExpiryDate,
+                Lines             = s.ShipmentLines.Select(l => new ShipmentLineDto
                 {
                     ShipmentLineId   = l.ShipmentLineId,
                     ProductId        = l.ProductId,
@@ -75,6 +77,13 @@ public class ShipmentService(
         if (entity is null) return null;
 
         entity.DeliveryStatus = model.DeliveryStatus;
+
+        if (model.ManufacturingDate.HasValue)
+        {
+            entity.ManufacturingDate = model.ManufacturingDate;
+            entity.ExpiryDate        = model.ManufacturingDate.Value.AddDays(10);
+        }
+
         await shipmentRepo.UpdateAsync(entity);
         return await GetShipmentByIdAsync(id);
     }
