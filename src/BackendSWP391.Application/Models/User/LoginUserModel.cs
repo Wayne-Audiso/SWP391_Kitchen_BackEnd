@@ -14,5 +14,7 @@ public class LoginResponseModel
     public string Role { get; set; }
     public string Email { get; set; }
     public string Token { get; set; }
+    public int? StoreId { get; set; }
+    public int? CentralKitchenId { get; set; }
 }
 

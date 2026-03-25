@@ -17,9 +17,16 @@ public static class AutomatedMigration
         "Supply Coordinator"
     ];
 
-    private const string AdminUserName = "admin";
-    private const string AdminEmail    = "admin@kitchen.com";
-    private const string AdminPassword = "Admin@123456";
+    private record SeedUser(string UserName, string Email, string Password, string Role);
+
+    private static readonly SeedUser[] SeedUsers =
+    [
+        new("admin",        "admin@kitchen.com",    "Admin@123456",   "Admin"),
+        new("manager",      "manager@kitchen.com",  "Manager@123456", "Manager"),
+        new("store_staff",  "store@kitchen.com",    "Store@123456",   "Franchise Store Staff"),
+        new("kitchen_staff","kitchen@kitchen.com",  "Kitchen@123456", "Central Kitchen Staff"),
+        new("supply_coord", "supply@kitchen.com",   "Supply@123456",  "Supply Coordinator"),
+    ];
 
     public static async Task MigrateAsync(IServiceProvider services)
     {
@@ -28,7 +35,7 @@ public static class AutomatedMigration
         if (context.Database.IsSqlServer()) await context.Database.MigrateAsync();
 
         await SeedRolesAsync(services);
-        await SeedAdminAsync(services);
+        await SeedUsersAsync(services);
         await SeedMasterDataAsync(context);
     }
 
@@ -45,22 +52,25 @@ public static class AutomatedMigration
         }
     }
 
-    private static async Task SeedAdminAsync(IServiceProvider services)
+    private static async Task SeedUsersAsync(IServiceProvider services)
     {
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
 
-        if (await userManager.FindByNameAsync(AdminUserName) is not null) return;
-
-        var admin = new ApplicationUser
+        foreach (var seed in SeedUsers)
         {
-            UserName       = AdminUserName,
-            Email          = AdminEmail,
-            EmailConfirmed = true
-        };
+            if (await userManager.FindByNameAsync(seed.UserName) is not null) continue;
 
-        var result = await userManager.CreateAsync(admin, AdminPassword);
-        if (result.Succeeded)
-            await userManager.AddToRoleAsync(admin, "Admin");
+            var user = new ApplicationUser
+            {
+                UserName       = seed.UserName,
+                Email          = seed.Email,
+                EmailConfirmed = true
+            };
+
+            var result = await userManager.CreateAsync(user, seed.Password);
+            if (result.Succeeded)
+                await userManager.AddToRoleAsync(user, seed.Role);
+        }
     }
 
     // ── Master Data ─────────────────────────────────────────────────────────
@@ -75,6 +85,8 @@ public static class AutomatedMigration
         await SeedInventoryLocationsAsync(db);
         await SeedRecipesAsync(db);
         await SeedRecipeIngredientsAsync(db);
+        await SeedProductRecipeLinksAsync(db);
+        await SeedStoreIngredientStocksAsync(db);
     }
 
     private static async Task SeedCentralKitchensAsync(DatabaseContext db)
@@ -137,8 +149,9 @@ public static class AutomatedMigration
     {
         if (await db.Products.AnyAsync()) return;
 
+        // RecipeId sẽ được gán sau khi Recipes được seed (SeedProductRecipeLinksAsync)
         db.Products.AddRange(
-            // Main Dish (ProductTypeId = 1)
+            // Main Dish (ProductTypeId = 1) — RecipeId gán sau
             new Product { ProductTypeId = 1, ProductName = "Beef Pho Special",          Status = "Active", Unit = "bowl" },
             new Product { ProductTypeId = 1, ProductName = "Hue Beef Noodle Soup",      Status = "Active", Unit = "bowl" },
             new Product { ProductTypeId = 1, ProductName = "Steamed Chicken Rice",      Status = "Active", Unit = "set" },
@@ -291,6 +304,114 @@ public static class AutomatedMigration
         Add("Sweet and Sour Fish Sauce","Fish Sauce",            0.1m);
         Add("Sweet and Sour Fish Sauce","White Sugar",           0.02m);
         Add("Sweet and Sour Fish Sauce","Salt",                  0.005m);
+
+        await db.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Gắn Recipe vào Product sau khi cả hai đã được seed.
+    /// Chỉ update những product chưa có RecipeId.
+    /// </summary>
+    private static async Task SeedProductRecipeLinksAsync(DatabaseContext db)
+    {
+        var products = await db.Products.ToDictionaryAsync(p => p.ProductName, p => p);
+        var recipes  = await db.Recipes.ToDictionaryAsync(r => r.RecipeName,   r => r.RecipeId);
+
+        var links = new Dictionary<string, string>
+        {
+            ["Beef Pho Special"]          = "Beef Pho Special",
+            ["Hue Beef Noodle Soup"]      = "Hue Beef Noodle Soup",
+            ["Steamed Chicken Rice"]      = "Steamed Chicken Rice",
+            ["Grilled Pork Banh Mi"]      = "Grilled Pork Banh Mi",
+            ["Grilled Pork Chop Rice"]    = "Grilled Pork Chop Rice",
+            ["Black Bean Sauce"]          = "Black Bean Sauce",
+            ["Sweet and Sour Fish Sauce"] = "Sweet and Sour Fish Sauce",
+        };
+
+        var changed = false;
+        foreach (var (productName, recipeName) in links)
+        {
+            if (!products.TryGetValue(productName, out var product)) continue;
+            if (!recipes.TryGetValue(recipeName,   out var recipeId)) continue;
+            if (product.RecipeId == recipeId) continue;
+
+            product.RecipeId = recipeId;
+            changed = true;
+        }
+
+        if (changed) await db.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Seed kho nguyên liệu mẫu cho 2 cửa hàng đầu tiên để test luồng bán hàng.
+    /// Hạn sử dụng: lô A còn hạn (30 ngày), lô B sắp hết hạn (2 ngày) để test ProcessExpired.
+    /// </summary>
+    private static async Task SeedStoreIngredientStocksAsync(DatabaseContext db)
+    {
+        if (await db.StoreIngredientStocks.AnyAsync()) return;
+
+        var now    = DateTime.UtcNow;
+        var soon   = now.AddDays(2);   // sắp hết hạn — test ProcessExpired
+        var normal = now.AddDays(30);  // còn hàng bình thường
+
+        // ── Ingredient IDs (theo thứ tự seed) ───────────────────────────────────
+        // 1=Beef, 2=Pork, 3=WholeChicken, 4=BeefBone, 5=Flour, 6=JasmineRice,
+        // 7=FreshRiceVermicelli, 8=FreshPhoNoodle, 9=Onion, 10=Garlic,
+        // 11=Lemongrass, 12=Ginger, 13=FishSauce, 14=CookingOil,
+        // 15=WhiteSugar, 16=Salt, 17=SeasoningPowder, 18=BlackPepper
+
+        var ings = await db.Ingredients.ToDictionaryAsync(i => i.IngredientName, i => i.IngredientId);
+
+        int? Id(string name) => ings.TryGetValue(name, out var id) ? id : null;
+
+        void Stock(int storeId, string ingName, decimal qty, DateTime expiry)
+        {
+            var ingId = Id(ingName);
+            if (ingId is null) return;
+            db.StoreIngredientStocks.Add(new StoreIngredientStock
+            {
+                StoreId      = storeId,
+                IngredientId = ingId.Value,
+                CurrentStock = qty,
+                ExpiryDate   = expiry,
+                UpdatedAt    = now
+            });
+        }
+
+        // ── Store 1 (Cau Giay Branch) — đủ nguyên liệu cho nhiều món ─────────────
+        // Lô bình thường
+        Stock(1, "Beef",                  5m,   normal);
+        Stock(1, "Beef Bone",             8m,   normal);
+        Stock(1, "Fresh Pho Noodle",      4m,   normal);
+        Stock(1, "Pork",                  5m,   normal);
+        Stock(1, "Fresh Rice Vermicelli", 4m,   normal);
+        Stock(1, "Whole Chicken",         10m,  normal);
+        Stock(1, "Jasmine Rice",          10m,  normal);
+        Stock(1, "All-purpose Flour",     5m,   normal);
+        Stock(1, "Onion",                 3m,   normal);
+        Stock(1, "Garlic",                2m,   normal);
+        Stock(1, "Lemongrass",            2m,   normal);
+        Stock(1, "Ginger",                1m,   normal);
+        Stock(1, "Fish Sauce",            3m,   normal);
+        Stock(1, "Cooking Oil",           3m,   normal);
+        Stock(1, "White Sugar",           2m,   normal);
+        Stock(1, "Salt",                  1m,   normal);
+        Stock(1, "Seasoning Powder",      1m,   normal);
+        Stock(1, "Black Pepper",          0.5m, normal);
+        // Lô sắp hết hạn — để test "Kiểm tra hàng hết hạn"
+        Stock(1, "Beef",                  2m,   soon);
+        Stock(1, "Fresh Pho Noodle",      1m,   soon);
+
+        // ── Store 2 (Hoan Kiem Branch) — kho ít hàng để test cảnh báo tồn kho thấp
+        Stock(2, "Beef",                  0.2m, normal); // dưới MinStock (50kg)
+        Stock(2, "Beef Bone",             0.3m, normal);
+        Stock(2, "Fresh Pho Noodle",      0.5m, normal);
+        Stock(2, "Jasmine Rice",          2m,   normal);
+        Stock(2, "Whole Chicken",         1m,   normal);
+        Stock(2, "Fish Sauce",            0.5m, normal);
+        Stock(2, "Salt",                  0.2m, normal);
+        Stock(2, "Ginger",                0.1m, normal);
+        Stock(2, "Lemongrass",            0.1m, normal);
 
         await db.SaveChangesAsync();
     }

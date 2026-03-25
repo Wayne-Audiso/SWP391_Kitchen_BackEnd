@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using BackendSWP391.Application.Models;
 using BackendSWP391.Application.Models.User;
@@ -6,6 +7,7 @@ using BackendSWP391.Application.Services;
 
 namespace BackendSWP391.API.Controllers;
 
+[Authorize(Roles = "Admin")]
 public class UsersController(IUserService userService) : ApiController
 {
     [HttpPost]

@@ -19,6 +19,10 @@ public partial class Shipment
 
     public DateTime? ReceivedDate { get; set; }
 
+    public DateTime? ManufacturingDate { get; set; }
+
+    public DateTime? ExpiryDate { get; set; }
+
     public virtual CentralKitchen CentralKitchen { get; set; }
 
     public virtual ICollection<ShipmentLine> ShipmentLines { get; set; } = new List<ShipmentLine>();

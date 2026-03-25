@@ -28,8 +28,8 @@ public class ProductTypesController(IProductService productService) : ApiControl
         return Ok(ApiResult<ProductTypeDto>.Ok(result, "Lấy thông tin loại sản phẩm thành công"));
     }
 
-    /// <summary>POST /api/product-types — Yêu cầu role Admin.</summary>
-    [Authorize(Roles = "Admin")]
+    /// <summary>POST /api/product-types — Yêu cầu role Admin hoặc Manager.</summary>
+    [Authorize(Roles = "Admin,Manager")]
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateProductTypeModel model)
     {
@@ -37,8 +37,8 @@ public class ProductTypesController(IProductService productService) : ApiControl
         return StatusCode(201, ApiResult<ProductTypeDto>.Created(result, "Tạo loại sản phẩm thành công"));
     }
 
-    /// <summary>PUT /api/product-types/{id} — Yêu cầu role Admin.</summary>
-    [Authorize(Roles = "Admin")]
+    /// <summary>PUT /api/product-types/{id} — Yêu cầu role Admin hoặc Manager.</summary>
+    [Authorize(Roles = "Admin,Manager")]
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateProductTypeModel model)
     {

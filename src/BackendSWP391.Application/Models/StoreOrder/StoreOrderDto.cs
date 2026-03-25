@@ -10,6 +10,8 @@ public class StoreOrderDto
     public DateTime? OrderDate         { get; set; }
     public string?   Status            { get; set; }
     public DateTime? DeliveryDate      { get; set; }
+    public string?   RejectReason     { get; set; }
+    public int?      ProductionBatchId { get; set; }
     public List<StoreOrderLineDto> Lines { get; set; } = new();
     public int TotalQuantity => Lines.Sum(l => l.Quantity);
 }

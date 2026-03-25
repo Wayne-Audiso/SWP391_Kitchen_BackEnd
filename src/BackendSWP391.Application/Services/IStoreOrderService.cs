@@ -10,4 +10,5 @@ public interface IStoreOrderService
     Task<StoreOrderDto> CreateOrderAsync(CreateStoreOrderModel model);
     Task<StoreOrderDto?> UpdateOrderStatusAsync(int id, UpdateStoreOrderStatusModel model);
     Task<bool> DeleteOrderAsync(int id);
+    Task<StockCheckResult?> CheckStockAsync(int orderId);
 }

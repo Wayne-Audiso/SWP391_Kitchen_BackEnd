@@ -21,9 +21,15 @@ public partial class StoreOrder
 
     public DateTime? DeliveryDate { get; set; }
 
+    public string? RejectReason { get; set; }
+
+    public int? ProductionBatchId { get; set; }
+
     public virtual CentralKitchen CentralKitchen { get; set; }
 
     public virtual FranchiseStore FranchiseStore { get; set; }
+
+    public virtual ProductionBatch? ProductionBatch { get; set; }
 
     public virtual ICollection<Shipment> Shipments { get; set; } = new List<Shipment>();
 

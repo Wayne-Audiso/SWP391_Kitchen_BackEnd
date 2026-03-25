@@ -8,4 +8,5 @@ public class IngredientDto
     public string?  StorageCondition  { get; set; }
     public int?     MinStock          { get; set; }
     public decimal? Price             { get; set; }
+    public decimal? CurrentStock      { get; set; }
 }

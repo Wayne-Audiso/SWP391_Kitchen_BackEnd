@@ -8,6 +8,8 @@ public class ShipmentDto
     public string?   KitchenName      { get; set; }
     public DateTime? ShipmentDate     { get; set; }
     public string?   DeliveryStatus   { get; set; }
-    public DateTime? ReceivedDate     { get; set; }
+    public DateTime? ReceivedDate      { get; set; }
+    public DateTime? ManufacturingDate { get; set; }
+    public DateTime? ExpiryDate        { get; set; }
     public List<ShipmentLineDto> Lines { get; set; } = new();
 }

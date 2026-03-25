@@ -35,8 +35,8 @@ public class InventoryLocationsController(IInventoryLocationService locationServ
         return Ok(ApiResult<List<InventoryLocationDto>>.Ok(data, "Lấy vị trí kho theo bếp thành công"));
     }
 
-    /// <summary>POST /api/inventory-locations — Yêu cầu role Admin hoặc Manager.</summary>
-    [Authorize(Roles = "Admin,Manager")]
+    /// <summary>POST /api/inventory-locations — Yêu cầu role Admin, Manager hoặc Central Kitchen Staff.</summary>
+    [Authorize(Roles = "Admin,Manager,Central Kitchen Staff")]
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateInventoryLocationModel model)
     {
@@ -44,8 +44,8 @@ public class InventoryLocationsController(IInventoryLocationService locationServ
         return StatusCode(201, ApiResult<InventoryLocationDto>.Created(result, "Tạo vị trí kho thành công"));
     }
 
-    /// <summary>PUT /api/inventory-locations/{id} — Yêu cầu role Admin hoặc Manager.</summary>
-    [Authorize(Roles = "Admin,Manager")]
+    /// <summary>PUT /api/inventory-locations/{id} — Yêu cầu role Admin, Manager hoặc Central Kitchen Staff.</summary>
+    [Authorize(Roles = "Admin,Manager,Central Kitchen Staff")]
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateInventoryLocationModel model)
     {

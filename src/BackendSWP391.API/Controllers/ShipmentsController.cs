@@ -10,7 +10,7 @@ namespace BackendSWP391.API.Controllers;
 public class ShipmentsController(IShipmentService shipmentService) : ApiController
 {
     /// <summary>GET /api/shipments — Lấy danh sách chuyến giao hàng kèm thông tin chi tiết.</summary>
-    [Authorize(Roles = "Admin,Manager,Supply Coordinator")]
+    [Authorize(Roles = "Admin,Manager,Supply Coordinator,Franchise Store Staff,Central Kitchen Staff")]
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
