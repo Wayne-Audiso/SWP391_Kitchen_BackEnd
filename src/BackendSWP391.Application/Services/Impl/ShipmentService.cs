@@ -7,7 +7,9 @@ namespace BackendSWP391.Application.Services.Impl;
 
 public class ShipmentService(
     IGenericRepository<Shipment>     shipmentRepo,
-    IGenericRepository<ShipmentLine> lineRepo) : IShipmentService
+    IGenericRepository<ShipmentLine> lineRepo,
+    IGenericRepository<StoreOrder>   storeOrderRepo,
+    IStoreInventoryService           storeInventoryService) : IShipmentService
 {
     private IQueryable<ShipmentDto> ProjectedQuery =>
         shipmentRepo.Queryable
@@ -106,6 +108,11 @@ public class ShipmentService(
         entity.ReceivedDate   = DateTime.UtcNow;
         entity.DeliveryStatus = "Delivered";
         await shipmentRepo.UpdateAsync(entity);
+
+        // Cập nhật kho Franchise Store khi xác nhận nhận hàng
+        var order = await storeOrderRepo.FindAsync(entity.StoreOrderId);
+        if (order is not null)
+            await storeInventoryService.AddStockFromShipmentAsync(id, order.FranchiseStoreId);
 
         return await GetShipmentByIdAsync(id);
     }

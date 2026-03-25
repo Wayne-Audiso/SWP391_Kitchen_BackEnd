@@ -40,6 +40,10 @@ public partial class DatabaseContext : IdentityDbContext<ApplicationUser>
 
     public virtual DbSet<ProductionBatchLine> ProductionBatchLines { get; set; }
 
+    public virtual DbSet<StoreIngredientStock> StoreIngredientStocks { get; set; }
+
+    public virtual DbSet<StoreCostRecord>      StoreCostRecords      { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -124,6 +128,9 @@ public partial class DatabaseContext : IdentityDbContext<ApplicationUser>
             entity.Property(e => e.Price)
                 .HasColumnType("decimal(18,2)")
                 .HasColumnName("price");
+            entity.Property(e => e.CurrentStock)
+                .HasColumnType("decimal(18,2)")
+                .HasColumnName("currentStock");
         });
 
         modelBuilder.Entity<InventoryLocation>(entity =>
@@ -443,6 +450,57 @@ public partial class DatabaseContext : IdentityDbContext<ApplicationUser>
                 .HasForeignKey(d => d.ProductId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_batchline_product");
+        });
+
+        modelBuilder.Entity<StoreIngredientStock>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("StoreIngredientStock");
+
+            entity.Property(e => e.CurrentStock)
+                .HasColumnType("decimal(18,2)")
+                .HasDefaultValue(0);
+            entity.Property(e => e.UpdatedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasIndex(e => new { e.StoreId, e.IngredientId })
+                .HasDatabaseName("IX_StoreIngredientStock_Store");
+
+            entity.HasOne(d => d.Store)
+                .WithMany()
+                .HasForeignKey(d => d.StoreId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_sis_store");
+
+            entity.HasOne(d => d.Ingredient)
+                .WithMany()
+                .HasForeignKey(d => d.IngredientId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_sis_ingredient");
+        });
+
+        modelBuilder.Entity<StoreCostRecord>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("StoreCostRecord");
+
+            entity.Property(e => e.Quantity).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.Cost).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.CostType).HasMaxLength(20).IsUnicode(false);
+            entity.Property(e => e.Notes).HasMaxLength(255);
+            entity.Property(e => e.OccurredAt).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasOne(d => d.Store)
+                .WithMany()
+                .HasForeignKey(d => d.StoreId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_scr_store");
+
+            entity.HasOne(d => d.Ingredient)
+                .WithMany()
+                .HasForeignKey(d => d.IngredientId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_scr_ingredient");
         });
 
         OnModelCreatingPartial(modelBuilder);

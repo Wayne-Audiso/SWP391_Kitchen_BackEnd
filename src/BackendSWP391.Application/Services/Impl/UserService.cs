@@ -70,11 +70,13 @@ public class UserService(
 
         return new LoginResponseModel
         {
-            UserId   = user.Id,
-            Username = user.UserName,
-            Role     = roles.FirstOrDefault(),
-            Email    = user.Email,
-            Token    = jwtToken
+            UserId           = user.Id,
+            Username         = user.UserName,
+            Role             = roles.FirstOrDefault(),
+            Email            = user.Email,
+            Token            = jwtToken,
+            StoreId          = user.StoreId,
+            CentralKitchenId = user.CentralKitchenId
         };
     }
 
