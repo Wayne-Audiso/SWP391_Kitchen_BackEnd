@@ -8,5 +8,6 @@ public interface IIngredientService
     Task<IngredientDto?> GetIngredientByIdAsync(int id);
     Task<IngredientDto> CreateIngredientAsync(CreateIngredientModel model);
     Task<IngredientDto?> UpdateIngredientAsync(int id, UpdateIngredientModel model);
+    Task<IngredientDto> AddCentralStockAsync(int ingredientId, decimal quantity, string? notes = null);
     Task<bool> DeleteIngredientAsync(int id);
 }

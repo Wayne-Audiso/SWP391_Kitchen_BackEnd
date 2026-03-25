@@ -47,6 +47,18 @@ public class IngredientsController(IIngredientService ingredientService) : ApiCo
         return Ok(ApiResult<IngredientDto>.Ok(result, "Cập nhật nguyên liệu thành công"));
     }
 
+    /// <summary>
+    /// POST /api/ingredients/{id}/add-stock — Nhập kho bếp trung tâm (cộng tồn kho CurrentStock).
+    /// Yêu cầu role Admin, Manager hoặc Central Kitchen Staff.
+    /// </summary>
+    [Authorize(Roles = "Admin,Manager,Central Kitchen Staff")]
+    [HttpPost("{id:int}/add-stock")]
+    public async Task<IActionResult> AddStock(int id, [FromBody] AdjustIngredientStockModel model)
+    {
+        var result = await ingredientService.AddCentralStockAsync(id, model.Quantity, model.Notes);
+        return Ok(ApiResult<IngredientDto>.Ok(result, "Nhập kho thành công"));
+    }
+
     /// <summary>DELETE /api/ingredients/{id} — Xóa cứng. Yêu cầu role Admin.</summary>
     [Authorize(Roles = "Admin")]
     [HttpDelete("{id:int}")]

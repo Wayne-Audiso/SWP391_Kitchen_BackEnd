@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using BackendSWP391.Application.Exceptions;
 using BackendSWP391.Application.Models.StoreInventory;
 using BackendSWP391.Core.Models;
+using BackendSWP391.DataAccess.Persistence;
 using BackendSWP391.DataAccess.Repositories;
 
 namespace BackendSWP391.Application.Services.Impl;
@@ -14,7 +15,8 @@ public class StoreInventoryService(
     IGenericRepository<Product>              productRepo,
     IGenericRepository<RecipeIngredient>     recipeIngredientRepo,
     IGenericRepository<Ingredient>           ingredientRepo,
-    IGenericRepository<StoreOrder>           storeOrderRepo) : IStoreInventoryService
+    IGenericRepository<StoreOrder>           storeOrderRepo,
+    DatabaseContext                          db) : IStoreInventoryService
 {
     public async Task<List<StoreStockDto>> GetStoreStockAsync(int storeId)
     {
@@ -137,10 +139,18 @@ public class StoreInventoryService(
             .Where(l => l.ShipmentId == shipmentId)
             .ToListAsync();
 
+        // Gom tổng số lượng cần cộng theo ingredient để tránh update cùng 1 row nhiều lần
+        var addByIngredient = new Dictionary<int, decimal>();
+        var wasteByIngredient = new Dictionary<int, decimal>();
+
         foreach (var line in lines)
         {
             var receivedQty = line.ReceivedQuantity ?? line.ShippedQuantity ?? 0;
-            if (receivedQty <= 0) continue;
+            var damagedQty  = line.DamagedQuantity ?? 0;
+            if (receivedQty <= 0 && damagedQty <= 0) continue;
+
+            var usableQty = receivedQty - damagedQty;
+            if (usableQty < 0) usableQty = 0;
 
             var product = await productRepo.FindAsync(line.ProductId);
             if (product?.RecipeId is null) continue;
@@ -151,35 +161,88 @@ public class StoreInventoryService(
 
             foreach (var ri in recipeIngredients)
             {
-                var addQty = (ri.Quantity ?? 0m) * receivedQty;
-                if (addQty == 0) continue;
-
-                // Upsert: nếu đã có row với cùng storeId+ingredientId+expiryDate thì cộng thêm
-                var existing = await stockRepo.Queryable
-                    .FirstOrDefaultAsync(s =>
-                        s.StoreId      == storeId          &&
-                        s.IngredientId == ri.IngredientId  &&
-                        s.ExpiryDate   == shipment.ExpiryDate);
-
-                if (existing is not null)
+                if (usableQty > 0)
                 {
-                    existing.CurrentStock += addQty;
-                    existing.UpdatedAt     = DateTime.UtcNow;
-                    await stockRepo.UpdateAsync(existing);
-                }
-                else
-                {
-                    await stockRepo.AddAsync(new StoreIngredientStock
+                    var addQty = (ri.Quantity ?? 0m) * usableQty;
+                    if (addQty != 0)
                     {
-                        StoreId      = storeId,
-                        IngredientId = ri.IngredientId,
-                        CurrentStock = addQty,
-                        ExpiryDate   = shipment.ExpiryDate,
-                        UpdatedAt    = DateTime.UtcNow
-                    });
+                        if (addByIngredient.ContainsKey(ri.IngredientId))
+                            addByIngredient[ri.IngredientId] += addQty;
+                        else
+                            addByIngredient[ri.IngredientId] = addQty;
+                    }
+                }
+
+                if (damagedQty > 0)
+                {
+                    var wasteQty = (ri.Quantity ?? 0m) * damagedQty;
+                    if (wasteQty != 0)
+                    {
+                        if (wasteByIngredient.ContainsKey(ri.IngredientId))
+                            wasteByIngredient[ri.IngredientId] += wasteQty;
+                        else
+                            wasteByIngredient[ri.IngredientId] = wasteQty;
+                    }
                 }
             }
         }
+
+        if (addByIngredient.Count == 0 && wasteByIngredient.Count == 0) return;
+
+        var now = DateTime.UtcNow;
+        foreach (var (ingredientId, totalAdd) in addByIngredient)
+        {
+            // Query tracked entity để EF không bị conflict tracking
+            var existing = await db.StoreIngredientStocks
+                .FirstOrDefaultAsync(s =>
+                    s.StoreId      == storeId &&
+                    s.IngredientId == ingredientId &&
+                    s.ExpiryDate   == shipment.ExpiryDate);
+
+            if (existing is not null)
+            {
+                existing.CurrentStock += totalAdd;
+                existing.UpdatedAt     = now;
+            }
+            else
+            {
+                db.StoreIngredientStocks.Add(new StoreIngredientStock
+                {
+                    StoreId      = storeId,
+                    IngredientId = ingredientId,
+                    CurrentStock = totalAdd,
+                    ExpiryDate   = shipment.ExpiryDate,
+                    UpdatedAt    = now
+                });
+            }
+        }
+
+        // Ghi nhận WasteCost cho phần hư hỏng (không cộng vào tồn kho usable)
+        if (wasteByIngredient.Count > 0)
+        {
+            var ingIds = wasteByIngredient.Keys.ToList();
+            var ingMap = await db.Ingredients
+                .Where(i => ingIds.Contains(i.IngredientId))
+                .ToDictionaryAsync(i => i.IngredientId, i => i);
+
+            foreach (var (ingredientId, wasteQty) in wasteByIngredient)
+            {
+                if (!ingMap.TryGetValue(ingredientId, out var ing)) continue;
+
+                db.StoreCostRecords.Add(new StoreCostRecord
+                {
+                    StoreId      = storeId,
+                    IngredientId = ingredientId,
+                    Quantity     = wasteQty,
+                    Cost         = wasteQty * (ing.Price ?? 0m),
+                    CostType     = "WasteCost",
+                    OccurredAt   = now,
+                    Notes        = $"Hàng hỏng khi nhận lô #{shipmentId}"
+                });
+            }
+        }
+
+        await db.SaveChangesAsync();
     }
 
     public async Task<List<StoreCostRecordDto>> GetCostRecordsAsync(int storeId, string? costType)

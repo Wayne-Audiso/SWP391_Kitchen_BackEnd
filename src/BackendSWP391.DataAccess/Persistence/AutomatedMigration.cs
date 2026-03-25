@@ -82,6 +82,7 @@ public static class AutomatedMigration
         await SeedProductTypesAsync(db);
         await SeedProductsAsync(db);
         await SeedIngredientsAsync(db);
+        await NormalizeIngredientCurrentStockAsync(db);
         await SeedInventoryLocationsAsync(db);
         await SeedRecipesAsync(db);
         await SeedRecipeIngredientsAsync(db);
@@ -182,26 +183,46 @@ public static class AutomatedMigration
         if (await db.Ingredients.AnyAsync()) return;
 
         db.Ingredients.AddRange(
-            new Ingredient { IngredientName = "Beef",                  Unit = "kg",    StorageCondition = "Chilled 0-4C",               MinStock = 50,  Price = 250000 },
-            new Ingredient { IngredientName = "Pork",                  Unit = "kg",    StorageCondition = "Chilled 0-4C",               MinStock = 40,  Price = 150000 },
-            new Ingredient { IngredientName = "Whole Chicken",         Unit = "pc",    StorageCondition = "Chilled 0-4C",               MinStock = 30,  Price = 120000 },
-            new Ingredient { IngredientName = "Beef Bone",             Unit = "kg",    StorageCondition = "Frozen -18C",                MinStock = 30,  Price = 80000  },
-            new Ingredient { IngredientName = "All-purpose Flour",     Unit = "kg",    StorageCondition = "Room temperature, keep dry", MinStock = 50,  Price = 20000  },
-            new Ingredient { IngredientName = "Jasmine Rice",          Unit = "kg",    StorageCondition = "Room temperature, keep dry", MinStock = 100, Price = 25000  },
-            new Ingredient { IngredientName = "Fresh Rice Vermicelli", Unit = "kg",    StorageCondition = "Chilled 4-8C",               MinStock = 30,  Price = 30000  },
-            new Ingredient { IngredientName = "Fresh Pho Noodle",      Unit = "kg",    StorageCondition = "Chilled 4-8C",               MinStock = 30,  Price = 35000  },
-            new Ingredient { IngredientName = "Onion",                 Unit = "kg",    StorageCondition = "Room temperature",            MinStock = 20,  Price = 20000  },
-            new Ingredient { IngredientName = "Garlic",                Unit = "kg",    StorageCondition = "Room temperature",            MinStock = 10,  Price = 40000  },
-            new Ingredient { IngredientName = "Lemongrass",            Unit = "kg",    StorageCondition = "Chilled 4-8C",               MinStock = 10,  Price = 30000  },
-            new Ingredient { IngredientName = "Ginger",                Unit = "kg",    StorageCondition = "Room temperature",            MinStock = 5,   Price = 50000  },
-            new Ingredient { IngredientName = "Fish Sauce",            Unit = "liter", StorageCondition = "Room temperature",            MinStock = 20,  Price = 45000  },
-            new Ingredient { IngredientName = "Cooking Oil",           Unit = "liter", StorageCondition = "Room temperature",            MinStock = 20,  Price = 40000  },
-            new Ingredient { IngredientName = "White Sugar",           Unit = "kg",    StorageCondition = "Room temperature, keep dry", MinStock = 20,  Price = 25000  },
-            new Ingredient { IngredientName = "Salt",                  Unit = "kg",    StorageCondition = "Room temperature, keep dry", MinStock = 10,  Price = 10000  },
-            new Ingredient { IngredientName = "Seasoning Powder",      Unit = "kg",    StorageCondition = "Room temperature, keep dry", MinStock = 10,  Price = 50000  },
-            new Ingredient { IngredientName = "Black Pepper",          Unit = "kg",    StorageCondition = "Room temperature, keep dry", MinStock = 5,   Price = 200000 }
+            new Ingredient { IngredientName = "Beef",                  Unit = "kg",    StorageCondition = "Chilled 0-4C",               MinStock = 50,  Price = 250000, CurrentStock = 150  },
+            new Ingredient { IngredientName = "Pork",                  Unit = "kg",    StorageCondition = "Chilled 0-4C",               MinStock = 40,  Price = 150000, CurrentStock = 120  },
+            new Ingredient { IngredientName = "Whole Chicken",         Unit = "pc",    StorageCondition = "Chilled 0-4C",               MinStock = 30,  Price = 120000, CurrentStock = 80   },
+            new Ingredient { IngredientName = "Beef Bone",             Unit = "kg",    StorageCondition = "Frozen -18C",                MinStock = 30,  Price = 80000,  CurrentStock = 100  },
+            new Ingredient { IngredientName = "All-purpose Flour",     Unit = "kg",    StorageCondition = "Room temperature, keep dry", MinStock = 50,  Price = 20000,  CurrentStock = 200  },
+            new Ingredient { IngredientName = "Jasmine Rice",          Unit = "kg",    StorageCondition = "Room temperature, keep dry", MinStock = 100, Price = 25000,  CurrentStock = 300  },
+            new Ingredient { IngredientName = "Fresh Rice Vermicelli", Unit = "kg",    StorageCondition = "Chilled 4-8C",               MinStock = 30,  Price = 30000,  CurrentStock = 80   },
+            new Ingredient { IngredientName = "Fresh Pho Noodle",      Unit = "kg",    StorageCondition = "Chilled 4-8C",               MinStock = 30,  Price = 35000,  CurrentStock = 90   },
+            new Ingredient { IngredientName = "Onion",                 Unit = "kg",    StorageCondition = "Room temperature",           MinStock = 20,  Price = 20000,  CurrentStock = 60   },
+            new Ingredient { IngredientName = "Garlic",                Unit = "kg",    StorageCondition = "Room temperature",           MinStock = 10,  Price = 40000,  CurrentStock = 30   },
+            new Ingredient { IngredientName = "Lemongrass",            Unit = "kg",    StorageCondition = "Chilled 4-8C",               MinStock = 10,  Price = 30000,  CurrentStock = 25   },
+            new Ingredient { IngredientName = "Ginger",                Unit = "kg",    StorageCondition = "Room temperature",           MinStock = 5,   Price = 50000,  CurrentStock = 15   },
+            new Ingredient { IngredientName = "Fish Sauce",            Unit = "liter", StorageCondition = "Room temperature",           MinStock = 20,  Price = 45000,  CurrentStock = 50   },
+            new Ingredient { IngredientName = "Cooking Oil",           Unit = "liter", StorageCondition = "Room temperature",           MinStock = 20,  Price = 40000,  CurrentStock = 60   },
+            new Ingredient { IngredientName = "White Sugar",           Unit = "kg",    StorageCondition = "Room temperature, keep dry", MinStock = 20,  Price = 25000,  CurrentStock = 50   },
+            new Ingredient { IngredientName = "Salt",                  Unit = "kg",    StorageCondition = "Room temperature, keep dry", MinStock = 10,  Price = 10000,  CurrentStock = 30   },
+            new Ingredient { IngredientName = "Seasoning Powder",      Unit = "kg",    StorageCondition = "Room temperature, keep dry", MinStock = 10,  Price = 50000,  CurrentStock = 25   },
+            new Ingredient { IngredientName = "Black Pepper",          Unit = "kg",    StorageCondition = "Room temperature, keep dry", MinStock = 5,   Price = 200000, CurrentStock = 15   }
         );
         await db.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Đảm bảo tồn kho nguyên liệu bếp trung tâm không bị NULL.
+    /// Tránh trường hợp DB đã có Ingredient từ trước (seed không chạy) dẫn tới CurrentStock = NULL.
+    /// </summary>
+    private static async Task NormalizeIngredientCurrentStockAsync(DatabaseContext db)
+    {
+        // EF Core 7+ supports ExecuteUpdateAsync
+        var affected = await db.Ingredients
+            .Where(i => i.CurrentStock == null)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(
+                i => i.CurrentStock,
+                i => (decimal)(
+                    (i.MinStock.HasValue && i.MinStock.Value > 0)
+                        ? (i.MinStock.Value * 3)  // đủ để test luồng giao từ kho
+                        : 100                     // fallback nếu chưa cấu hình MinStock
+                )));
+
+        _ = affected;
     }
 
     private static async Task SeedInventoryLocationsAsync(DatabaseContext db)

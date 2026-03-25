@@ -1,5 +1,6 @@
 using Mapster;
 using Microsoft.EntityFrameworkCore;
+using BackendSWP391.Application.Exceptions;
 using BackendSWP391.Application.Models.Ingredient;
 using BackendSWP391.Core.Models;
 using BackendSWP391.DataAccess.Repositories;
@@ -57,5 +58,22 @@ public class IngredientService(IGenericRepository<Ingredient> ingredientRepo) : 
 
         await ingredientRepo.DeleteAsync(entity);
         return true;
+    }
+
+    public async Task<IngredientDto> AddCentralStockAsync(int ingredientId, decimal quantity, string? notes = null)
+    {
+        if (quantity <= 0)
+            throw new BadRequestException("Số lượng nhập kho phải lớn hơn 0");
+
+        var entity = await ingredientRepo.FindAsync(ingredientId)
+            ?? throw new NotFoundException($"Không tìm thấy nguyên liệu Id={ingredientId}");
+
+        entity.CurrentStock = (entity.CurrentStock ?? 0m) + quantity;
+        await ingredientRepo.UpdateAsync(entity);
+
+        // Hiện tại hệ thống chưa có bảng nhật ký kho trung tâm; notes được để sẵn cho mở rộng sau.
+        _ = notes;
+
+        return entity.Adapt<IngredientDto>();
     }
 }
